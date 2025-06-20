@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 namespace Emik.Manual;
-
+#pragma warning disable CS9113
 /// <summary>
 /// Represents the set of requirements for <see cref="Location"/> or <see cref="Region"/> to be considered reachable.
 /// </summary>
