@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>
-        <DocumentationMarkdown>$(MSBuildProjectDirectory)\API.md</DocumentationMarkdown>
+        <RepositoryUrl>https://github.com/Emik03/Emik.Manual</RepositoryUrl>
+        <PackageProjectUrl>https://github.com/Emik03/Emik.Manual</PackageProjectUrl>
+        <Description>Library to programmatically create manual .apworld files.</Description>
+        <PackageTags>Archipelago MultiWorld MW Manual Multigame Multi Game Randomizer Generation APWorld AP World</PackageTags>
     </PropertyGroup>
-    <ItemGroup>
-        <PackageReference Include="Vsxmd" Version="1.4.5" PrivateAssets="all"/>
-    </ItemGroup>
 </Project>

@@ -253,12 +253,6 @@
         "resolved": "5.0.0-1.25277.114",
         "contentHash": "nbYnMWteAF4lNvlqD24ejnmeEvmYW3tchdrymrhqhDbnsDqkUyg2N/uQY1FIyQNwLXX3eMwF7GQ+Z37rgtKxgw=="
       },
-      "Vsxmd": {
-        "type": "Direct",
-        "requested": "[1.4.5, )",
-        "resolved": "1.4.5",
-        "contentHash": "mvTZKIhKUFvcjYv/p9dxgSFHrAlNFIemT3ai1XAFV4yJYGu/6e73NgzfHwhDi0QevuYURVdd+p088CG6KQFENg=="
-      },
       "DotNetAnalyzers.DocumentationAnalyzers.Unstable": {
         "type": "Transitive",
         "resolved": "1.0.0.59",
