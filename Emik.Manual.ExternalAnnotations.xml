@@ -1,0 +1,109 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<assembly name="Emik.Manual">
+  <member name="M:Emik.Manual.Domains.ArchipelagoDictionaryValues`1.#ctor(System.Collections.Generic.Dictionary{System.String,`0})">
+    <parameter name="dictionary">
+      <attribute ctor="M:JetBrains.Annotations.ProvidesContextAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Emik.Manual.Domains.Chars.Replace(System.Buffers.SearchValues{System.Char},System.Boolean)">
+    <attribute ctor="M:JetBrains.Annotations.MustUseReturnValueAttribute.#ctor" />
+  </member>
+  <member name="M:Emik.Manual.World.AllItemsWith(Emik.Manual.Domains.Category)">
+    <attribute ctor="M:JetBrains.Annotations.LinqTunnelAttribute.#ctor" />
+  </member>
+  <member name="M:Emik.Manual.World.AllItemsWithAll(Emik.Manual.Domains.ArchipelagoListBuilder{Emik.Manual.Domains.Category})">
+    <attribute ctor="M:JetBrains.Annotations.LinqTunnelAttribute.#ctor" />
+  </member>
+  <member name="M:Emik.Manual.World.AllItemsWithAny(Emik.Manual.Domains.ArchipelagoListBuilder{Emik.Manual.Domains.Category})">
+    <attribute ctor="M:JetBrains.Annotations.LinqTunnelAttribute.#ctor" />
+  </member>
+  <member name="M:Emik.Manual.World.AllLocationsWith(Emik.Manual.Domains.Category)">
+    <attribute ctor="M:JetBrains.Annotations.LinqTunnelAttribute.#ctor" />
+  </member>
+  <member name="M:Emik.Manual.World.AllLocationsWithAll(Emik.Manual.Domains.ArchipelagoListBuilder{Emik.Manual.Domains.Category})">
+    <attribute ctor="M:JetBrains.Annotations.LinqTunnelAttribute.#ctor" />
+  </member>
+  <member name="M:Emik.Manual.World.AllLocationsWithAny(Emik.Manual.Domains.ArchipelagoListBuilder{Emik.Manual.Domains.Category})">
+    <attribute ctor="M:JetBrains.Annotations.LinqTunnelAttribute.#ctor" />
+  </member>
+  <member name="M:Emik.Manual.World.Game">
+    <attribute ctor="M:JetBrains.Annotations.MustUseReturnValueAttribute.#ctor(System.String)">
+      <argument>Use Game.WriteAsync() or Game.ZipAsync() to generate the manual world.</argument>
+    </attribute>
+  </member>
+  <member name="M:Emik.Manual.World.Game(Emik.Manual.Domains.Chars,Emik.Manual.Domains.Chars,Emik.Manual.Domains.Chars,System.Boolean,System.Collections.Immutable.ImmutableArray{Emik.Manual.Domains.StartingItemBlock})">
+    <attribute ctor="M:JetBrains.Annotations.MustUseReturnValueAttribute.#ctor(System.String)">
+      <argument>Use Game.WriteAsync() or Game.ZipAsync() to generate the manual world.</argument>
+    </attribute>
+  </member>
+  <member name="M:Emik.Manual.World.Game(Emik.Manual.Domains.Chars,Emik.Manual.Domains.Chars,Emik.Manual.Domains.Chars,System.Boolean,System.Int32,System.Collections.Immutable.ImmutableArray{Emik.Manual.Domains.StartingItemBlock})">
+    <attribute ctor="M:JetBrains.Annotations.MustUseReturnValueAttribute.#ctor(System.String)">
+      <argument>Use Game.WriteAsync() or Game.ZipAsync() to generate the manual world.</argument>
+    </attribute>
+  </member>
+  <member name="M:Emik.Manual.World.Game(Emik.Manual.Domains.Chars,Emik.Manual.Domains.Chars,Emik.Manual.Domains.Chars,System.Collections.Immutable.ImmutableArray{Emik.Manual.Domains.StartingItemBlock})">
+    <attribute ctor="M:JetBrains.Annotations.MustUseReturnValueAttribute.#ctor(System.String)">
+      <argument>Use Game.WriteAsync() or Game.ZipAsync() to generate the manual world.</argument>
+    </attribute>
+  </member>
+  <member name="M:Emik.Manual.World.Game(Emik.Manual.Domains.Chars,Emik.Manual.Domains.Chars,System.Collections.Immutable.ImmutableArray{Emik.Manual.Domains.StartingItemBlock})">
+    <attribute ctor="M:JetBrains.Annotations.MustUseReturnValueAttribute.#ctor(System.String)">
+      <argument>Use Game.WriteAsync() or Game.ZipAsync() to generate the manual world.</argument>
+    </attribute>
+  </member>
+  <member name="M:Emik.Manual.World.Game(Emik.Manual.Domains.Chars,System.Collections.Immutable.ImmutableArray{Emik.Manual.Domains.StartingItemBlock})">
+    <attribute ctor="M:JetBrains.Annotations.MustUseReturnValueAttribute.#ctor(System.String)">
+      <argument>Use Game.WriteAsync() or Game.ZipAsync() to generate the manual world.</argument>
+    </attribute>
+  </member>
+  <member name="M:Emik.Manual.World.Game(Emik.Manual.Domains.Chars)">
+    <attribute ctor="M:JetBrains.Annotations.MustUseReturnValueAttribute.#ctor(System.String)">
+      <argument>Use Game.WriteAsync() or Game.ZipAsync() to generate the manual world.</argument>
+    </attribute>
+  </member>
+  <member name="M:Emik.Manual.World.Game(System.Collections.Immutable.ImmutableArray{Emik.Manual.Domains.StartingItemBlock})">
+    <attribute ctor="M:JetBrains.Annotations.MustUseReturnValueAttribute.#ctor(System.String)">
+      <argument>Use Game.WriteAsync() or Game.ZipAsync() to generate the manual world.</argument>
+    </attribute>
+  </member>
+  <member name="M:Emik.Manual.World.Item(Emik.Manual.Domains.Chars,System.Nullable{Emik.Manual.Domains.Priority},Emik.Manual.Domains.ArchipelagoListBuilder{Emik.Manual.Domains.Category},System.Int32,System.Collections.Immutable.ImmutableArray{System.ValueTuple{Emik.Manual.Domains.Chars,System.Int32}},System.Int32,System.Int32,System.Nullable{System.Int32})">
+    <parameter name="categories">
+      <attribute ctor="M:JetBrains.Annotations.InstantHandleAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Emik.Manual.World.Location(Emik.Manual.Domains.Chars,Emik.Manual.Logic,Emik.Manual.Domains.ArchipelagoListBuilder{Emik.Manual.Domains.Category},Emik.Manual.Domains.Region@,Emik.Manual.Domains.LocationOptions,Emik.Manual.Domains.CategoryOrItemListBuilder,Emik.Manual.Domains.CategoryOrItemListBuilder,Emik.Manual.Domains.Chars,System.Nullable{System.Int32})">
+    <parameter name="categories">
+      <attribute ctor="M:JetBrains.Annotations.InstantHandleAttribute.#ctor" />
+    </parameter>
+    <parameter name="allowList">
+      <attribute ctor="M:JetBrains.Annotations.InstantHandleAttribute.#ctor" />
+    </parameter>
+    <parameter name="denyList">
+      <attribute ctor="M:JetBrains.Annotations.InstantHandleAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Emik.Manual.World.Region(Emik.Manual.Domains.Chars,Emik.Manual.Logic,Emik.Manual.Domains.ArchipelagoListBuilder{Emik.Manual.Domains.Passage},System.Boolean,Emik.Manual.Domains.ArchipelagoListBuilder{Emik.Manual.Domains.Passage})">
+    <parameter name="connectsTo">
+      <attribute ctor="M:JetBrains.Annotations.InstantHandleAttribute.#ctor" />
+    </parameter>
+    <parameter name="entrances">
+      <attribute ctor="M:JetBrains.Annotations.InstantHandleAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Emik.Manual.World.Region(Emik.Manual.Domains.Chars,Emik.Manual.Logic,Emik.Manual.Domains.ArchipelagoListBuilder{Emik.Manual.Domains.Region},System.Boolean,Emik.Manual.Domains.ArchipelagoListBuilder{Emik.Manual.Domains.Passage})">
+    <parameter name="connectsTo">
+      <attribute ctor="M:JetBrains.Annotations.InstantHandleAttribute.#ctor" />
+    </parameter>
+    <parameter name="entrances">
+      <attribute ctor="M:JetBrains.Annotations.InstantHandleAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Emik.Manual.World.Region(Emik.Manual.Domains.Chars,Emik.Manual.Logic,System.Boolean,Emik.Manual.Domains.ArchipelagoListBuilder{Emik.Manual.Domains.Passage})">
+    <parameter name="entrances">
+      <attribute ctor="M:JetBrains.Annotations.InstantHandleAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Emik.Manual.Yaml.ToString(System.Boolean)">
+    <attribute ctor="M:JetBrains.Annotations.MustUseReturnValueAttribute.#ctor" />
+  </member>
+</assembly>
