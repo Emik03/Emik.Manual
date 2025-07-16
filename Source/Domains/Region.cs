@@ -41,37 +41,35 @@ public readonly partial record struct Region(
     public static implicit operator Region(ReadOnlyMemory<char> name) => new(name);
 
     /// <inheritdoc />
-    void IAddTo.CopyTo([NotNullIfNotNull(nameof(value))] ref JsonNode? value)
+    void IAddTo.CopyTo([NotNullIfNotNull(nameof(value))] ref JsonNode? value, IReadOnlyCollection<Region>? regions)
     {
         JsonObject obj = [];
 
         if (IsStarting)
             obj["starting"] = true;
 
-        if (Logic is not null)
-            obj["requires"] = Logic.ToString();
-
         if (!ConnectsTo.IsDefaultOrEmpty)
             obj["connects_to"] = IArchipelago<Region>.Json(ConnectsTo);
 
         if (!Exits.IsDefaultOrEmpty)
-            obj["exit_requires"] = Json(Exits);
+            obj["exit_requires"] = Json(Exits, regions);
 
         if (!Entrances.IsDefaultOrEmpty)
-            obj["entrance_requires"] = Json(Entrances);
+            obj["entrance_requires"] = Json(Entrances, regions);
 
+        Logic?.CopyTo(ref value, regions);
         (value ??= new JsonObject())[Name.ToString()] = obj;
     }
 
     /// <inheritdoc />
     [Pure]
-    public override string ToString() => IAddTo.ToJsonString(this);
+    public override string ToString() => Name.ToString();
 
     /// <summary>Gets the combined logic.</summary>
     /// <param name="regions">All regions.</param>
     /// <returns>The combined logic.</returns>
-    public Logic? ExpandedLogic(ICollection<Region> regions) =>
-        IsStarting ? Logic : regions.Aggregate((regions, Logic: (Logic?)null), Start).Logic;
+    public Logic? ExpandedLogic(IReadOnlyCollection<Region>? regions) =>
+        regions is null || IsStarting ? Logic : regions.Aggregate((regions, Logic: (Logic?)null), Start).Logic;
 
     /// <summary>Gets the starting regions, excluding itself.</summary>
     /// <param name="regions">All regions.</param>
@@ -89,13 +87,13 @@ public readonly partial record struct Region(
 
     /// <inheritdoc cref="IArchipelago{T}.Json(ImmutableArray{T})"/>
     [Pure]
-    static JsonObject Json(ImmutableArray<Passage> span)
+    static JsonObject Json(ImmutableArray<Passage> span, IReadOnlyCollection<Region>? regions)
     {
         JsonObject ret = [];
 
         foreach (var (region, logic) in span)
             if (logic is not null)
-                ret[region.Name.ToString()] = logic.ToString();
+                ret[region.Name.ToString()] = (logic.ExpandLocations(regions) ?? logic).ToString();
 
         return ret;
     }
@@ -119,7 +117,10 @@ public readonly partial record struct Region(
     /// <param name="region">The potential starting region to start the search in.</param>
     /// <returns>The next accumulator.</returns>
     [Pure]
-    (ICollection<Region> Regions, Logic? Logic) Start((ICollection<Region> Regions, Logic? Logic) a, Region region) =>
+    (IReadOnlyCollection<Region> Regions, Logic? Logic) Start(
+        (IReadOnlyCollection<Region> Regions, Logic? Logic) a,
+        Region region
+    ) =>
         region.IsStarting && Next(region.Starters(a.Regions), region) is (var l, true)
             ? a with { Logic = a.Logic is null ? l : a.Logic | l }
             : a;

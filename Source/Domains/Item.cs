@@ -62,9 +62,9 @@ public readonly partial record struct Item(
 
     /// <inheritdoc />
     // ReSharper disable once CognitiveComplexity
-    void IAddTo.CopyTo([NotNullIfNotNull(nameof(value))] ref JsonNode? value)
+    void IAddTo.CopyTo([NotNullIfNotNull(nameof(value))] ref JsonNode? value, IReadOnlyCollection<Region>? regions)
     {
-        JsonObject obj = new() { ["name"] = Name.ToString() };
+        JsonObject obj = new() { ["name"] = ToString() };
 
         if (Count > 1)
             obj["count"] = Count;
@@ -127,7 +127,7 @@ public readonly partial record struct Item(
 
     /// <inheritdoc />
     [Pure]
-    public override string ToString() => IAddTo.ToJsonString(this);
+    public override string ToString() => Name.ToString();
 
     /// <summary>Makes a requirement that the item should be obtained in at least some threshold percentage.</summary>
     /// <param name="percent">The percent.</param>

@@ -58,9 +58,10 @@ public readonly partial record struct Location(
 
     /// <inheritdoc />
     // ReSharper disable once CognitiveComplexity
-    void IAddTo.CopyTo([NotNullIfNotNull(nameof(value))] ref JsonNode? value)
+    void IAddTo.CopyTo([NotNullIfNotNull(nameof(value))] ref JsonNode? value, IReadOnlyCollection<Region>? regions)
     {
-        JsonObject obj = new() { ["name"] = Name.ToString() };
+        JsonObject obj = new() { ["name"] = ToString() };
+        Logic?.CopyTo(ref value, regions);
 
         if (Id is { } id)
             obj["id"] = id;
@@ -68,14 +69,11 @@ public readonly partial record struct Location(
         if (!Categories.IsDefaultOrEmpty)
             obj["category"] = IArchipelago<Category>.Json(Categories);
 
-        if (Logic is not null)
-            obj["requires"] = Logic.ToString();
-
         if (!HintEntrance.Memory.IsEmpty)
             obj["hint_entrance"] = HintEntrance.ToString();
 
-        if (Region is { Name: { IsEmpty: false } name })
-            obj["region"] = name.ToString();
+        if (Region is { Name.IsEmpty: false } region)
+            obj["region"] = region.ToString();
 
         if (Options.Has(LocationOptions.Victory))
             obj["victory"] = true;
@@ -111,5 +109,5 @@ public readonly partial record struct Location(
 
     /// <inheritdoc />
     [Pure]
-    public override string ToString() => IAddTo.ToJsonString(this);
+    public override string ToString() => Name.ToString();
 }

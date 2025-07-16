@@ -277,7 +277,7 @@ public readonly partial struct ArchipelagoListBuilder<T> : IList<T>
         JsonArray ret = [];
 
         for (int i = 0, count = Count; i < count; i++)
-            ret.Add(this[i].Name);
+            ret.Add(this[i].ToString());
 
         return ret;
     }
@@ -318,7 +318,7 @@ public readonly partial struct ArchipelagoListBuilder<T> : IList<T>
 
     /// <inheritdoc />
     [Pure]
-    public override string ToString() => Json().ToJsonString();
+    public override string ToString() => $"[{_builder.Conjoin()}]";
 
     /// <inheritdoc cref="ImmutableArray{T}.Builder.Insert(int, T)"/>
     public void Insert(int index, string item) => Insert(index, (T)item);

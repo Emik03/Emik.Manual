@@ -49,10 +49,10 @@ public readonly partial record struct StartingItemBlock(
     public static implicit operator StartingItemBlock((Item Item, int Amount) item) => new([item.Item], item.Amount);
 
     /// <inheritdoc />
-    public void CopyTo(ref JsonNode? value)
+    public void CopyTo(ref JsonNode? value, IReadOnlyCollection<Region>? regions)
     {
         JsonNode obj = new JsonObject();
-        Set.CopyTo(ref obj);
+        Set.CopyTo(ref obj, regions);
 
         if (Amount is { } choose)
             obj["random"] = choose;
@@ -79,5 +79,6 @@ public readonly partial record struct StartingItemBlock(
 
     /// <inheritdoc />
     [Pure]
-    public override string ToString() => IAddTo.ToJsonString(this);
+    public override string ToString() =>
+        $"[{Set.CategoryBuilder.Select(x => x.Name).Concat(Set.ItemBuilder.Select(x => x.Name)).Conjoin()}]";
 }

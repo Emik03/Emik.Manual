@@ -141,6 +141,10 @@ public readonly partial struct ArchipelagoDictionaryValues<T>([ProvidesContext] 
 
     /// <inheritdoc />
     [Pure]
+    public override string ToString() => $"[{dictionary.Values.Conjoin()}]";
+
+    /// <inheritdoc />
+    [Pure]
     public IEnumerator<T> GetEnumerator() => dictionary.Values.GetEnumerator();
 
     /// <inheritdoc />

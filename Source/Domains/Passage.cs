@@ -16,9 +16,12 @@ public sealed partial record Passage(Region Region, Logic? Logic = null) : IAddT
     public static implicit operator Passage(ReadOnlyMemory<char> name) => new((Region)name);
 
     /// <inheritdoc />
-    public void CopyTo([NotNullIfNotNull(nameof(value))] ref JsonNode? value)
+    public void CopyTo([NotNullIfNotNull(nameof(value))] ref JsonNode? value, IReadOnlyCollection<Region>? regions)
     {
         if (Logic is not null)
-            (value ??= new JsonObject())[Name.ToString()] = Logic.ToString();
+            (value ??= new JsonObject())[Name.ToString()] = (Logic.ExpandLocations(regions) ?? Logic).ToString();
     }
+
+    /// <inheritdoc />
+    public override string ToString() => $"{Region}: {Logic}";
 }

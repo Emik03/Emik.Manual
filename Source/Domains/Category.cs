@@ -36,7 +36,7 @@ public readonly partial record struct Category(Chars Name, bool IsHidden = false
     public static implicit operator Category(ReadOnlyMemory<char> name) => new(name);
 
     /// <inheritdoc />
-    void IAddTo.CopyTo([NotNullIfNotNull(nameof(value))] ref JsonNode? value)
+    void IAddTo.CopyTo([NotNullIfNotNull(nameof(value))] ref JsonNode? value, IReadOnlyCollection<Region>? regions)
     {
         if (!IsHidden && Yaml.IsDefaultOrEmpty)
             return;
@@ -49,12 +49,12 @@ public readonly partial record struct Category(Chars Name, bool IsHidden = false
         if (Manual.Yaml.Json(Yaml) is { } options)
             category["yaml_option"] = options;
 
-        (value ??= new JsonObject())[Name.ToString()] = category;
+        (value ??= new JsonObject())[ToString()] = category;
     }
 
     /// <inheritdoc />
     [Pure]
-    public override string ToString() => IAddTo.ToJsonString(this);
+    public override string ToString() => Name.ToString();
 
     /// <summary>
     /// Makes a requirement that items with this category should be obtained in at least some threshold percentage.

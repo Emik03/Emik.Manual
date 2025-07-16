@@ -83,7 +83,7 @@ public readonly partial struct CategoryOrItemListBuilder : IAddTo, ICollection<C
     public void CopyTo(Item[] array, int arrayIndex) => _items.CopyTo(array, arrayIndex);
 
     /// <inheritdoc />
-    public void CopyTo([NotNullIfNotNull(nameof(node))] ref JsonNode? node)
+    public void CopyTo([NotNullIfNotNull(nameof(node))] ref JsonNode? node, IReadOnlyCollection<Region>? regions)
     {
         if (Json(_categories) is { } categories)
             (node ??= new JsonObject())["item_categories"] = categories;
@@ -116,7 +116,8 @@ public readonly partial struct CategoryOrItemListBuilder : IAddTo, ICollection<C
 
     /// <inheritdoc />
     [Pure]
-    public override string ToString() => IAddTo.ToJsonString(this);
+    public override string ToString() =>
+        $"[{_categories.Select(x => x.Name).Concat(_items.Select(x => x.Name)).Conjoin()}]";
 
     /// <inheritdoc />
     [Pure]
@@ -152,7 +153,7 @@ public readonly partial struct CategoryOrItemListBuilder : IAddTo, ICollection<C
         JsonArray ret = [];
 
         for (var i = 0; i < count; i++)
-            ret.Add(builder[i].Name.ToString());
+            ret.Add(builder[i].ToString());
 
         return ret;
     }

@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <FileVersion>1.1</FileVersion>
+        <FileVersion>2.0</FileVersion>
         <TargetFramework>net9.0</TargetFramework>
         <RepositoryUrl>https://github.com/Emik03/Emik.Manual</RepositoryUrl>
         <PackageProjectUrl>https://github.com/Emik03/Emik.Manual</PackageProjectUrl>

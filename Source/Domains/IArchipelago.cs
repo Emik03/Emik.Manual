@@ -45,7 +45,7 @@ public interface IArchipelago<out T>
         JsonArray ret = [];
 
         foreach (var ap in span)
-            ret.Add(ap.Name.ToString());
+            ret.Add(ap.ToString());
 
         return ret;
     }

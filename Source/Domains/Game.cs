@@ -32,7 +32,7 @@ public readonly partial record struct Game(
     public static implicit operator Game(ReadOnlyMemory<char> name) => new(null, name);
 
     /// <inheritdoc />
-    void IAddTo.CopyTo([NotNullIfNotNull(nameof(value))] ref JsonNode? value)
+    void IAddTo.CopyTo([NotNullIfNotNull(nameof(value))] ref JsonNode? value, IReadOnlyCollection<Region>? regions)
     {
         value ??= new JsonObject
         {
@@ -54,7 +54,7 @@ public readonly partial record struct Game(
         JsonNode? node = null;
 
         foreach (var startingItem in StartingItems)
-            startingItem.CopyTo(ref node);
+            startingItem.CopyTo(ref node, regions);
 
         if (node is not null)
             value["starting_items"] = node;
@@ -81,7 +81,7 @@ public readonly partial record struct Game(
 
     /// <inheritdoc />
     [Pure]
-    public override string ToString() => IAddTo.ToJsonString(this);
+    public override string ToString() => Name.ToString();
 
     /// <summary>Creates the yaml template.</summary>
     /// <param name="listChecks">Whether to list all items and locations.</param>
@@ -241,22 +241,33 @@ public readonly partial record struct Game(
     /// <param name="listChecks">
     /// When specified, additionally writes the template <c>.yaml</c>, passing this parameter in <see cref="Template"/>.
     /// </param>
+    /// <param name="expandLocations">
+    /// Whether to replace all uses of <see cref="Builtin.CanReachLocation"/> by expanding it into the equivalent
+    /// logic, since use of <see cref="Builtin.CanReachLocation"/> can dramatically increase generation time.
+    /// Expansion will make this method take longer, and can make the resulting logic strings difficult to read.
+    /// </param>
     /// <param name="token">The cancellation token.</param>
     /// <exception cref="IOException">A file could not be written.</exception>
-    public Task WriteAsync(string? directory = null, bool? listChecks = true, CancellationToken token = default)
+    public Task WriteAsync(
+        string? directory = null,
+        bool? listChecks = true,
+        bool expandLocations = false,
+        CancellationToken token = default
+    )
     {
         Directory.CreateDirectory(directory ??= Path.Join(Environment.CurrentDirectory, "data"));
-        var game = DiskAsync(Path.Join(directory, "game.json"), Json([this]), token);
+        var regions = expandLocations ? World?.AllRegions.Values.WithCount(World.AllRegions.Count) : null;
+        var game = DiskAsync(Path.Join(directory, "game.json"), Json([this], regions), token);
 
         return World is null
             ? game
             : Task.WhenAll(
                 DiskAsync(Path.Join(directory, $"{FullName()}.yaml"), listChecks is { } ls ? Template(ls) : "", token),
-                DiskAsync(Path.Join(directory, "categories.json"), Json(World.AllCategories), token),
-                DiskAsync(Path.Join(directory, "locations.json"), Json(World.AllLocations), token),
-                DiskAsync(Path.Join(directory, "regions.json"), Json(World.AllRegions), token),
+                DiskAsync(Path.Join(directory, "categories.json"), Json(World.AllCategories, regions), token),
+                DiskAsync(Path.Join(directory, "locations.json"), Json(World.AllLocations, regions), token),
+                DiskAsync(Path.Join(directory, "regions.json"), Json(World.AllRegions, regions), token),
                 DiskAsync(Path.Join(directory, "options.json"), World.OptionsString(), token),
-                DiskAsync(Path.Join(directory, "items.json"), Json(World.AllItems), token),
+                DiskAsync(Path.Join(directory, "items.json"), Json(World.AllItems, regions), token),
                 game
             );
     }
@@ -270,6 +281,11 @@ public readonly partial record struct Game(
     /// When specified, writes the template <c>.yaml</c> in the same directory as the parameter
     /// <paramref name="destination"/>, passing this parameter in <see cref="Template"/>.
     /// </param>
+    /// <param name="expandLocations">
+    /// Whether to replace all uses of <see cref="Builtin.CanReachLocation"/> by expanding it into the equivalent
+    /// logic, since use of <see cref="Builtin.CanReachLocation"/> can dramatically increase generation time.
+    /// Expansion will make this method take longer, and can make the resulting logic strings difficult to read.
+    /// </param>
     /// <param name="token">The cancellation token.</param>
     /// <exception cref="ArgumentException">The zip file could not be opened.</exception>
     /// <exception cref="IOException">The file could not be written.</exception>
@@ -278,6 +294,7 @@ public readonly partial record struct Game(
         string destination,
         string? apWorld = null,
         bool? listChecks = null,
+        bool expandLocations = false,
         CancellationToken token = default
     )
     {
@@ -301,6 +318,8 @@ public readonly partial record struct Game(
         using ZipArchive reader = new(await Reader(apWorld, token), ZipArchiveMode.Read),
             writer = new(new FileStream(destination, FileMode.Create, FileAccess.Write), ZipArchiveMode.Create);
 
+        var regions = expandLocations ? World?.AllRegions.Values.WithCount(World.AllRegions.Count) : null;
+
         foreach (var entry in reader.Entries)
             if (entry.FullName is not [.., '/'] and not [.., '.', 'j', 's', 'o', 'n'] &&
                 entry.FullName.IndexOf('/') is not -1 and var index &&
@@ -311,7 +330,7 @@ public readonly partial record struct Game(
                 await entryReader.CopyToAsync(entryWriter, token);
             }
 #pragma warning disable CA2025
-        var game = CopyToAsync(writer, "data/game.json", Json([this]), token);
+        var game = CopyToAsync(writer, "data/game.json", Json([this], regions), token);
 #pragma warning restore CA2025
         await (World is null
             ? game
@@ -321,11 +340,11 @@ public readonly partial record struct Game(
                     listChecks is { } lc ? Template(lc) : null,
                     token
                 ),
-                CopyToAsync(writer, "data/categories.json", Json(World.AllCategories), token),
-                CopyToAsync(writer, "data/locations.json", Json(World.AllLocations), token),
-                CopyToAsync(writer, "data/regions.json", Json(World.AllRegions), token),
+                CopyToAsync(writer, "data/categories.json", Json(World.AllCategories, regions), token),
+                CopyToAsync(writer, "data/locations.json", Json(World.AllLocations, regions), token),
+                CopyToAsync(writer, "data/regions.json", Json(World.AllRegions, regions), token),
                 CopyToAsync(writer, "data/options.json", World.OptionsString(), token),
-                CopyToAsync(writer, "data/items.json", Json(World.AllItems), token),
+                CopyToAsync(writer, "data/items.json", Json(World.AllItems, regions), token),
                 game
             ));
     }
@@ -346,16 +365,17 @@ public readonly partial record struct Game(
             : $"""
                  goal:
                    # The goal required of you in order to complete your run in Archipelago.
-               {goals.Select((x, i) => $"    {x.Name}: {(i is 0 ? 50 : 0)}\n").Concat()}
+               {goals.Select((x, i) => $"    {x}: {(i is 0 ? 50 : 0)}\n").Concat()}
 
                """;
 
     /// <summary>Creates the <c>JSON</c> <see cref="string"/> out of the collection.</summary>
     /// <typeparam name="T">The type of collection to enumerate and serialize.</typeparam>
     /// <param name="elements">The collection to enumerate and serialize.</param>
+    /// <param name="regions">The regions.</param>
     /// <returns>The serialized <c>JSON</c> <see cref="string"/> of the parameter <paramref name="elements"/>.</returns>
     [Pure]
-    static string? Json<T>(IEnumerable<T>? elements)
+    static string? Json<T>(IEnumerable<T>? elements, IReadOnlyCollection<Region>? regions)
         where T : IAddTo, IArchipelago<T>
     {
         if (elements is null)
@@ -364,7 +384,7 @@ public readonly partial record struct Game(
         JsonNode? t = null;
 
         foreach (var value in elements)
-            value.CopyTo(ref t);
+            value.CopyTo(ref t, regions);
 
         return t?.ToJsonString(new() { TypeInfoResolver = new DefaultJsonTypeInfoResolver(), WriteIndented = true });
     }
@@ -459,5 +479,5 @@ public readonly partial record struct Game(
 
     [Pure]
     string? GameName() =>
-        Name.IsEmpty ? new StackFrame(2).GetMethod()?.ReflectedType?.Assembly.GetName().Name : Name.ToString();
+        Name.IsEmpty ? new StackFrame(2).GetMethod()?.ReflectedType?.Assembly.GetName().Name : ToString();
 }

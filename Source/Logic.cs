@@ -228,7 +228,8 @@ public sealed partial class Logic(
         count <= 0 ? null : OfItemValue(phantomItem, new Explicit<int>(count));
 
     /// <inheritdoc />
-    void IAddTo.CopyTo(ref JsonNode? value) => (value ??= new JsonObject())["requires"] = ToString();
+    public void CopyTo(ref JsonNode? value, IReadOnlyCollection<Region>? regions) =>
+        (value ??= new JsonObject())["requires"] = (ExpandLocations(regions) ?? this).ToString();
 #pragma warning disable MA0016
     /// <summary>Throws if an unreferenced element is found.</summary>
     /// <param name="categories">The referenced categories.</param>
@@ -319,12 +320,13 @@ public sealed partial class Logic(
     /// <param name="regions">The regions.</param>
     /// <returns>The inlined logic.</returns>
     [Pure]
-    public Logic? ExpandLocations(ICollection<Region> regions) =>
-        _or is not ({ } left, { } right) ?
-            IsLocation ? Location.Logic & Location.Region.ExpandedLogic(regions) : null :
-            left.ExpandLocations(regions) is { } l &&
-            (right.ExpandLocations(regions) ?? right) is var lr ? IsOr ? l | lr : l & lr :
-                right.ExpandLocations(regions) is { } r ? IsOr ? left | r : left & r : null;
+    public Logic? ExpandLocations(IReadOnlyCollection<Region>? regions) =>
+        regions is null ? null :
+            _or is ({ } left, { } right) ?
+                left.ExpandLocations(regions) is { } l && (right.ExpandLocations(regions) ?? right) is var ir ?
+                    IsOr ? l | ir : l & ir :
+                    right.ExpandLocations(regions) is { } r ? IsOr ? left | r : left & r : null :
+                IsLocation ? Location.Logic & Location.Region.ExpandedLogic(regions) : null;
 
     /// <summary>Gets the value determining whether the item is unreferenced.</summary>
     /// <typeparam name="TArchipelago">The type of value to check.</typeparam>
