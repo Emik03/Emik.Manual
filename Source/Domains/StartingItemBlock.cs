@@ -49,7 +49,7 @@ public readonly partial record struct StartingItemBlock(
     public static implicit operator StartingItemBlock((Item Item, int Amount) item) => new([item.Item], item.Amount);
 
     /// <inheritdoc />
-    public void CopyTo(ref JsonNode? value, IReadOnlyCollection<Region>? regions)
+    public void CopyTo([NotNullIfNotNull(nameof(value))] ref JsonNode? value, IReadOnlyCollection<Region>? regions)
     {
         JsonNode obj = new JsonObject();
         Set.CopyTo(ref obj, regions);

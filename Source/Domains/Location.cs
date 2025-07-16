@@ -60,8 +60,8 @@ public readonly partial record struct Location(
     // ReSharper disable once CognitiveComplexity
     void IAddTo.CopyTo([NotNullIfNotNull(nameof(value))] ref JsonNode? value, IReadOnlyCollection<Region>? regions)
     {
-        JsonObject obj = new() { ["name"] = ToString() };
-        Logic?.CopyTo(ref value, regions);
+        JsonNode obj = new JsonObject { ["name"] = ToString() };
+        Logic?.CopyTo(ref obj, regions);
 
         if (Id is { } id)
             obj["id"] = id;

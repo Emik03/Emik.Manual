@@ -228,7 +228,7 @@ public sealed partial class Logic(
         count <= 0 ? null : OfItemValue(phantomItem, new Explicit<int>(count));
 
     /// <inheritdoc />
-    public void CopyTo(ref JsonNode? value, IReadOnlyCollection<Region>? regions) =>
+    public void CopyTo([NotNullIfNotNull(nameof(value))] ref JsonNode? value, IReadOnlyCollection<Region>? regions) =>
         (value ??= new JsonObject())["requires"] = (ExpandLocations(regions) ?? this).ToString();
 #pragma warning disable MA0016
     /// <summary>Throws if an unreferenced element is found.</summary>

@@ -57,8 +57,8 @@ public readonly partial record struct Region(
         if (!Entrances.IsDefaultOrEmpty)
             obj["entrance_requires"] = Json(Entrances, regions);
 
-        Logic?.CopyTo(ref value, regions);
         (value ??= new JsonObject())[Name.ToString()] = obj;
+        Logic?.CopyTo(ref value, regions);
     }
 
     /// <inheritdoc />
