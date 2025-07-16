@@ -27,6 +27,9 @@ public enum Priority : byte
     /// </summary>
     Progression = 1 << 3,
 
+    /// <summary>An especially useful progression item.</summary>
+    ProgressionUseful = Progression | Useful,
+
     /// <summary>Denotes that an item should not be moved to an earlier sphere for the purpose of balancing.</summary>
     SkipBalancing = 1 << 4,
 
@@ -35,6 +38,9 @@ public enum Priority : byte
     /// not be moved around by progression balancing; used, e.g., for currency or tokens, to not flood early spheres.
     /// </summary>
     ProgressionSkipBalancing = Progression | SkipBalancing,
+
+    /// <summary>An especially useful progression item that will not be moved around by progression balancing.</summary>
+    ProgressionUsefulSkipBalancing = Progression | Useful | SkipBalancing,
 
     /// <summary>Are all copies of this item supposed to be only in your locations, or can they be anywhere?</summary>
     Local = 1 << 5,

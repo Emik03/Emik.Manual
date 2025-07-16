@@ -73,7 +73,7 @@ await foreach (var (location, (categoryName, (hintEntrance, (meta, _)))) in Read
             _ => throw new UnreachableException(categoryName.ToString()),
         } &
         (world.AllLocations.TryGetValue(meta, out var inheritedLogic) ? inheritedLogic.Logic : null) &
-        world.Item(categoryName, Priority.Progression | Priority.Useful, world.Category("LEVELS")),
+        world.Item(categoryName, Priority.ProgressionUseful, world.Category("LEVELS")),
         [world.Category(categoryName), world.Category(location)],
         null,
         meta.Span is "VICTORY" ? LocationOptions.Victory : LocationOptions.None,
