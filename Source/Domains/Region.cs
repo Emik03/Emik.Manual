@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MPL-2.0
 namespace Emik.Manual.Domains;
 
+using Accumulator =
+    (HashSet<string>.AlternateLookup<ReadOnlySpan<char>> Visited, Region Current, Logic? Logic, bool Found);
+
 /// <summary>Represents an element in the <c>regions.json</c> file.</summary>
 /// <param name="Name">Name of the region.</param>
 /// <param name="Logic">
@@ -64,6 +67,26 @@ public readonly partial record struct Region(
     [Pure]
     public override string ToString() => IAddTo.ToJsonString(this);
 
+    /// <summary>Gets the combined logic.</summary>
+    /// <param name="regions">All regions.</param>
+    /// <returns>The combined logic.</returns>
+    public Logic? ExpandedLogic(ICollection<Region> regions) =>
+        IsStarting ? Logic : regions.Aggregate((regions, Logic: (Logic?)null), Start).Logic;
+
+    /// <summary>Gets the starting regions, excluding itself.</summary>
+    /// <param name="regions">All regions.</param>
+    /// <returns>The starting regions, excluding itself.</returns>
+    [Pure]
+    HashSet<string>.AlternateLookup<ReadOnlySpan<char>> Starters(IEnumerable<Region> regions)
+    {
+        var name = Name;
+
+        return regions.Where(x => x.IsStarting && x.Name != name)
+           .Select(x => x.Name.ToString())
+           .ToSet(StringComparer.Ordinal)
+           .GetAlternateLookup<ReadOnlySpan<char>>();
+    }
+
     /// <inheritdoc cref="IArchipelago{T}.Json(ImmutableArray{T})"/>
     [Pure]
     static JsonObject Json(ImmutableArray<Passage> span)
@@ -76,4 +99,39 @@ public readonly partial record struct Region(
 
         return ret;
     }
+
+    /// <summary>Combines the logic.</summary>
+    /// <param name="a">The accumulator.</param>
+    /// <param name="connection">The next connection.</param>
+    /// <returns>The new accumulator.</returns>
+    [Pure]
+    Accumulator Combine(Accumulator a, Region connection) =>
+        a is var (visited, current, logic, _) &&
+        Next(visited, current) is (var innerLogic, true) &&
+        (innerLogic &
+            current.Exits.FirstOrDefault(x => x.Name == connection.Name)?.Logic &
+            connection.Entrances.FirstOrDefault(x => x.Name == current.Name)?.Logic) is var and
+            ? a with { Logic = logic is null ? and : logic | and, Found = true }
+            : a;
+
+    /// <summary>Starts the recursive search.</summary>
+    /// <param name="a">The accumulator.</param>
+    /// <param name="region">The potential starting region to start the search in.</param>
+    /// <returns>The next accumulator.</returns>
+    [Pure]
+    (ICollection<Region> Regions, Logic? Logic) Start((ICollection<Region> Regions, Logic? Logic) a, Region region) =>
+        region.IsStarting && Next(region.Starters(a.Regions), region) is (var l, true)
+            ? a with { Logic = a.Logic is null ? l : a.Logic | l }
+            : a;
+
+    /// <summary>Performs the next step.</summary>
+    /// <param name="current">The current region to look at.</param>
+    /// <param name="visited">The names of the visited regions.</param>
+    /// <returns>The logic to get to this area, and whether it is relevant.</returns>
+    [Pure]
+    (Logic? Logic, bool Found) Next(HashSet<string>.AlternateLookup<ReadOnlySpan<char>> visited, Region current) =>
+        !visited.Add(current.Name.Span) ? default :
+        Name == current.Name ? (current.Logic, true) :
+        current.ConnectsTo is { IsDefaultOrEmpty: false } connections &&
+        connections.Aggregate((visited, current, (Logic?)null, false), Combine) is var (_, _, l, f) ? (l, f) : default;
 }

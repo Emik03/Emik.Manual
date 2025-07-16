@@ -57,6 +57,13 @@ public sealed partial class Logic(
     public Logic(string item, int count)
         : this(ValueTuple.Create((Item)item, count)) { }
 
+    /// <summary>Determines whether this node is optimized.</summary>
+    public bool IsOptimized { get; internal set; }
+
+    /// <summary>Gets the binary node.</summary>
+    // ReSharper disable once ConvertToAutoProperty ConvertToAutoPropertyWhenPossible
+    internal (Logic? Left, Logic? Right) Binary => _or;
+
     /// <summary>Gets the builtin kind.</summary>
     public Builtin? BuiltinKind =>
         Map<Builtin?>(
@@ -128,24 +135,66 @@ public sealed partial class Logic(
     public static implicit operator Logic((string Item, int Count) count) => OfItemCount(count.Item, count.Count);
 
     /// <summary>Makes a requirement that either of the instances should be fulfilled.</summary>
-    /// <param name="left">The left-hand side.</param>
-    /// <param name="right">The right-hand side.</param>
+    /// <param name="l">The left-hand side.</param>
+    /// <param name="r">The right-hand side.</param>
     /// <returns>The new <see cref="Logic"/> instance.</returns>
-    [return: NotNullIfNotNull(nameof(left)), NotNullIfNotNull(nameof(right))]
+    [return: NotNullIfNotNull(nameof(l)), NotNullIfNotNull(nameof(r))]
     [Pure]
-    public static Logic? operator |(Logic? left, Logic? right) =>
-        left is null ? right :
-        right is null ? left : OfOr(left, right);
+    public static Logic? operator |(Logic? l, Logic? r) =>
+        l is null ? l.Check(r) : // Identity Law
+        r is null ? r.Check(l) :
+        l.Commutative(r) ? l.Check(r) : // Idempotent Law
+        //    Input  -> Commutative Law -> Idempotent Law
+        // A + B + A ->    A + A + B    ->     A + B
+        l is { IsOr: true, Or: var (oll, olr) } && (oll.Commutative(r) || olr.Commutative(r)) ? l.Check(r) :
+        //    Input  -> Idempotent Law
+        // A + A + B ->     A + B
+        r is { IsOr: true, Or: var (orl, orr) } && (orl.Commutative(r) || orr.Commutative(r)) ? r.Check(l) :
+        //    Input    ->  Commutative Law  -> Absorption Law
+        // (A * B) + A ->    A + (A * B)    ->       A
+        l is { IsAnd: true, And: var (all, alr) } && (all.Commutative(r) || alr.Commutative(r)) ? r.Check(l) :
+        //    Input    -> Absorption Law
+        // A + (A * B) ->       A
+        r is { IsAnd: true, And: var (arl, arr) } && (arl.Commutative(r) || arr.Commutative(r)) ? l.Check(r) :
+        // This code was never in the bible.
+        l is { IsOr: true, Or: var (olll, olrl) } && (olrl | r) is { IsOptimized: true } ll ? OfOr(ll, olll) :
+        l is { IsOr: true, Or: var (ollr, olrr) } && (ollr | r) is { IsOptimized: true } rl ? OfOr(rl, olrr) :
+        r is { IsOr: true, Or: var (orll, orrl) } && (l | orrl) is { IsOptimized: true } lr ? OfOr(orll, lr) :
+        r is { IsOr: true, Or: var (orlr, orrr) } && (l | orlr) is { IsOptimized: true } rr ? OfOr(orrr, rr) :
+        // We cannot optimize this.
+        OfOr(l, r);
 
     /// <summary>Makes a requirement that both of the instances should be fulfilled.</summary>
-    /// <param name="left">The left-hand side.</param>
-    /// <param name="right">The right-hand side.</param>
+    /// <param name="l">The left-hand side.</param>
+    /// <param name="r">The right-hand side.</param>
     /// <returns>The new <see cref="Logic"/> instance.</returns>
-    [return: NotNullIfNotNull(nameof(left)), NotNullIfNotNull(nameof(right))]
+    [return: NotNullIfNotNull(nameof(l)), NotNullIfNotNull(nameof(r))]
     [Pure]
-    public static Logic? operator &(Logic? left, Logic? right) =>
-        left is null ? right :
-        right is null ? left : OfAnd(left, right);
+    public static Logic? operator &(Logic? l, Logic? r) =>
+        l is null ? r.Check(l) : // Annulment Law
+        r is null ? l.Check(r) :
+        l.Commutative(r) ? l.Check(r) : // Idempotent Law
+        //    Input    ->  Commutative Law -> Absorption Law
+        // (A + B) * A ->    A * (A + B)   ->       A
+        l is { IsOr: true, Or: var (oll, olr) } &&
+        (oll.Commutative(r) || olr.Commutative(r)) ? r.Check(l) :
+        //    Input    ->  Absorption Law
+        // A * (A + B) ->        A
+        r is { IsOr: true, Or: var (orl, orr) } &&
+        (orl.Commutative(r) || orr.Commutative(r)) ? l.Check(r) :
+        //   Input   -> Commutative Law -> Idempotent Law
+        // A * B * A ->    A * A * B    ->     A * B
+        l is { IsAnd: true, And: var (all, alr) } && (all.Commutative(r) || alr.Commutative(r)) ? l.Check(r) :
+        //   Input   -> Idempotent Law
+        // A * A * B ->     A * B
+        r is { IsAnd: true, And: var (arl, arr) } && (arl.Commutative(r) || arr.Commutative(r)) ? r.Check(l) :
+        // This code was never in the bible.
+        l is { IsAnd: true, And: var (alll, alrl) } && (alll & r) is { IsOptimized: true } ll ? OfAnd(ll, alrl) :
+        l is { IsAnd: true, And: var (allr, alrr) } && (allr & r) is { IsOptimized: true } rl ? OfAnd(rl, alrr) :
+        r is { IsAnd: true, And: var (arll, arrl) } && (l & arll) is { IsOptimized: true } lr ? OfAnd(arrl, lr) :
+        r is { IsAnd: true, And: var (arlr, arrr) } && (l & arlr) is { IsOptimized: true } rr ? OfAnd(arrr, rr) :
+        // We cannot optimize this.
+        OfAnd(l, r);
 
     /// <inheritdoc cref="OfCategoryPercent(Domains.Category, Explicit{int})"/>
     [Pure]
@@ -208,7 +257,7 @@ public sealed partial class Logic(
     }
 
     /// <inheritdoc />
-    [Obsolete("bro", true), Pure]
+    [Pure]
     public override string ToString() => ToString(false);
 
     /// <summary>Attempts to find a category whose key does not already exist in the provided collection.</summary>
@@ -265,6 +314,17 @@ public sealed partial class Logic(
     [Pure]
     public Location? FindUnreferencedLocation(Dictionary<string, Location> collection) =>
         IsLocation && IsUnreferenced(Location, collection) ? (Location?)Location : null;
+
+    /// <summary>Inlines all use of <see cref="Builtin.CanReachLocation"/>.</summary>
+    /// <param name="regions">The regions.</param>
+    /// <returns>The inlined logic.</returns>
+    [Pure]
+    public Logic? ExpandLocations(ICollection<Region> regions) =>
+        _or is not ({ } left, { } right) ?
+            IsLocation ? Location.Logic & Location.Region.ExpandedLogic(regions) : null :
+            left.ExpandLocations(regions) is { } l &&
+            (right.ExpandLocations(regions) ?? right) is var lr ? IsOr ? l | lr : l & lr :
+                right.ExpandLocations(regions) is { } r ? IsOr ? left | r : left & r : null;
 
     /// <summary>Gets the value determining whether the item is unreferenced.</summary>
     /// <typeparam name="TArchipelago">The type of value to check.</typeparam>
