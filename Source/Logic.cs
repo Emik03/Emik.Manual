@@ -141,8 +141,8 @@ public sealed partial class Logic(
     [return: NotNullIfNotNull(nameof(l)), NotNullIfNotNull(nameof(r))]
     [Pure]
     public static Logic? operator |(Logic? l, Logic? r) =>
-        l is null ? l.Check(r) : // Identity Law
-        r is null ? r.Check(l) :
+        l is null ? r.Check(l) : // Annulment Law; Cannot be Identity Law
+        r is null ? l.Check(r) :
         l.UnorderedEquals(r) ? l.Check(r) : // Idempotent Law
         //    Input  -> Commutative Law -> Idempotent Law
         // A + B + A ->    A + A + B    ->     A + B
@@ -367,7 +367,9 @@ public sealed partial class Logic(
 
     [Pure]
     static Category? FindAnyUnreferencedCategory(ImmutableArray<Category> x, Dictionary<string, Category> collection) =>
-        x.Select(x => IsUnreferenced(x, collection) ? (Category?)x : null).FirstOrDefault(x => x is not null);
+        x.IsDefaultOrEmpty
+            ? null
+            : x.Select(x => IsUnreferenced(x, collection) ? (Category?)x : null).FirstOrDefault(x => x is not null);
 
     /// <inheritdoc cref="object.ToString"/>
     /// <param name="state">The state.</param>

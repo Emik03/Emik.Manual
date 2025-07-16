@@ -109,7 +109,7 @@ public readonly partial record struct Region(
         (innerLogic &
             current.Exits.FirstOrDefault(x => x.Name == connection.Name)?.Logic &
             connection.Entrances.FirstOrDefault(x => x.Name == current.Name)?.Logic) is var and
-            ? a with { Logic = logic is null ? and : logic | and, Found = true }
+            ? a with { Logic = logic | and, Found = true }
             : a;
 
     /// <summary>Starts the recursive search.</summary>
@@ -122,7 +122,7 @@ public readonly partial record struct Region(
         Region region
     ) =>
         region.IsStarting && Next(region.Starters(a.Regions), region) is (var l, true)
-            ? a with { Logic = a.Logic is null ? l : a.Logic | l }
+            ? a with { Logic = a.Logic | l }
             : a;
 
     /// <summary>Performs the next step.</summary>
