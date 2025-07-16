@@ -28,6 +28,7 @@ public static partial class LogicFactory
     /// <param name="builder">The passages to check.</param>
     /// <param name="categories">The categories to synchronize.</param>
     /// <param name="items">The items to synchronize.</param>
+    /// <param name="locations">The locations to synchronize.</param>
     /// <param name="regions">The regions to synchronize.</param>
     /// <param name="fallback">The fallback priority for when one isn't specified.</param>
     /// <param name="strict">Whether to throw an exception when any parameter does not contain the key.</param>
@@ -39,6 +40,7 @@ public static partial class LogicFactory
         this in ArchipelagoListBuilder<Passage> builder,
         Dictionary<string, Category> categories,
         Dictionary<string, Item> items,
+        Dictionary<string, Location> locations,
         Dictionary<string, Region> regions,
         Priority fallback = Priority.None,
         bool strict = true
@@ -51,7 +53,7 @@ public static partial class LogicFactory
         {
             var (region, logic) = builder[i];
             ArchipelagoListBuilder<Region>.Sync(regions, ref region, fallback, strict);
-            logic?.ThrowIfUnreferenced(categories, items, strict);
+            logic?.ThrowIfUnreferenced(categories, items, locations, strict);
         }
     }
 }

@@ -14,6 +14,7 @@ public sealed partial class Logic(
     (Category Category, Logic.Explicit<int> Percent) categoryPercent,
     (Logic? Left, Logic? Right) or,
     (Logic? Left, Logic? Right) and,
+    Location location,
     (Chars PhantomItem, Logic.Explicit<int> Count) itemValue,
     (Item Item, ValueTuple Marker) optOne,
     Logic? optAll,
@@ -56,6 +57,27 @@ public sealed partial class Logic(
     public Logic(string item, int count)
         : this(ValueTuple.Create((Item)item, count)) { }
 
+    /// <summary>Gets the builtin kind.</summary>
+    public Builtin? BuiltinKind =>
+        Map<Builtin?>(
+            _ => null,
+            _ => null,
+            _ => null,
+            _ => null,
+            _ => null,
+            _ => null,
+            _ => null,
+            _ => null,
+            _ => Builtin.CanReachLocation,
+            _ => Builtin.ItemValue,
+            _ => Builtin.OptOne,
+            _ => Builtin.OptAll,
+            _ => Builtin.YamlEnabled,
+            _ => Builtin.YamlDisabled,
+            _ => Builtin.YamlCompare,
+            _ => Builtin.Custom
+        );
+
     /// <summary>
     /// Gets the yaml settings that this <see cref="Logic"/> references. This value is <see langword="null"/> if there
     /// are no yaml settings defined within this logic. Therefore, this collection can never be empty.
@@ -75,6 +97,7 @@ public sealed partial class Logic(
             x => x.Left?.YamlSettings is { } left
                 ? x.Right?.YamlSettings is { } leftRight ? left.Concat(leftRight) : left
                 : x.Right?.YamlSettings,
+            _ => null,
             _ => null,
             _ => null,
             x => x?.YamlSettings,
@@ -161,6 +184,7 @@ public sealed partial class Logic(
     /// <summary>Throws if an unreferenced element is found.</summary>
     /// <param name="categories">The referenced categories.</param>
     /// <param name="items">The referenced items.</param>
+    /// <param name="locations">The referenced locations.</param>
     /// <param name="strict">Whether to perform the check.</param>
     /// <exception cref="KeyNotFoundException">
     /// This logic instance contains an unreferenced category or item.
@@ -168,6 +192,7 @@ public sealed partial class Logic(
     public void ThrowIfUnreferenced(
         Dictionary<string, Category> categories,
         Dictionary<string, Item> items,
+        Dictionary<string, Location> locations,
         bool strict = true
     )
     {
@@ -177,45 +202,30 @@ public sealed partial class Logic(
                 throw new KeyNotFoundException($"\"{name}\" is referenced before it is defined in {nameof(Category)}!");
             case true when FindUnreferencedItem(items) is { Name: var name }:
                 throw new KeyNotFoundException($"\"{name}\" is referenced before it is defined in {nameof(Item)}!");
+            case true when FindUnreferencedLocation(locations) is { Name: var name }:
+                throw new KeyNotFoundException($"\"{name}\" is referenced before it is defined in {nameof(Location)}!");
         }
     }
 
     /// <inheritdoc />
-    [Pure]
-    public override string ToString() =>
-        Map(
-            x => $"|{x.Name}|",
-            x => $"|{x.Item.Name}:{x.Count}|",
-            x => $"|{x.Item.Name}:{Percent(x)}|",
-            x => $"|@{x.Name}|",
-            x => $"|@{x.Category.Name}:{x.Count}|",
-            x => $"|@{x.Category.Name}:{Percent(x)}|",
-            x => $"({x.Left} OR {x.Right})",
-            x => $"({x.Left} AND {x.Right})",
-            x => $"{{{nameof(Builtin.ItemValue)}({x.PhantomItem}:{x.Count})}}",
-            x => $"{{{nameof(Builtin.OptOne)}({x})}}",
-            x => $"{{{nameof(Builtin.OptAll)}({x})}}",
-            x => $"{{{nameof(Builtin.YamlEnabled)}({x})}}",
-            x => $"{{{nameof(Builtin.YamlDisabled)}({x})}}",
-            x => $"{{{nameof(Builtin.YamlCompare)}({x.Yaml} {Symbol(x.Comparator)} {x.Count})}}",
-            x => $"{{{x.Name}({x.Args})}}"
-        );
+    [Obsolete("bro", true), Pure]
+    public override string ToString() => ToString(false);
 
     /// <summary>Attempts to find a category whose key does not already exist in the provided collection.</summary>
     /// <param name="collection">The collection that has defined keys.</param>
     /// <returns>The category whose key does not exist in the collection, if one exists.</returns>
     [Pure]
     public Category? FindUnreferencedCategory(Dictionary<string, Category> collection) =>
-#pragma warning restore MA0016
         Map(
-            _ => null,
-            _ => null,
-            _ => null,
+            x => FindAnyUnreferencedCategory(x.Categories, collection),
+            x => FindAnyUnreferencedCategory(x.Item.Categories, collection),
+            x => FindAnyUnreferencedCategory(x.Item.Categories, collection),
             x => IsUnreferenced(x, collection) ? (Category?)x : null,
             x => IsUnreferenced(x.Category, collection) ? (Category?)x.Category : null,
             x => IsUnreferenced(x.Category, collection) ? (Category?)x.Category : null,
             x => x.Left?.FindUnreferencedCategory(collection) ?? x.Right?.FindUnreferencedCategory(collection),
             x => x.Left?.FindUnreferencedCategory(collection) ?? x.Right?.FindUnreferencedCategory(collection),
+            x => FindAnyUnreferencedCategory(x.Categories, collection),
             _ => null,
             _ => null,
             x => x?.FindUnreferencedCategory(collection),
@@ -229,9 +239,7 @@ public sealed partial class Logic(
     /// <param name="collection">The collection that has defined keys.</param>
     /// <returns>The item whose key does not exist in the collection, if one exists.</returns>
     [Pure]
-#pragma warning disable MA0016
     public Item? FindUnreferencedItem(Dictionary<string, Item> collection) =>
-#pragma warning restore MA0016
         Map(
             x => IsUnreferenced(x, collection) ? (Item?)x : null,
             x => IsUnreferenced(x.Item, collection) ? (Item?)x.Item : null,
@@ -243,12 +251,20 @@ public sealed partial class Logic(
             x => x.Left?.FindUnreferencedItem(collection) ?? x.Right?.FindUnreferencedItem(collection),
             _ => null,
             _ => null,
+            _ => null,
             x => x?.FindUnreferencedItem(collection),
             _ => null,
             _ => null,
             _ => null,
             _ => null
         );
+
+    /// <summary>Attempts to find an item whose key does not already exist in the provided collection.</summary>
+    /// <param name="collection">The collection that has defined keys.</param>
+    /// <returns>The item whose key does not exist in the collection, if one exists.</returns>
+    [Pure]
+    public Location? FindUnreferencedLocation(Dictionary<string, Location> collection) =>
+        IsLocation && IsUnreferenced(Location, collection) ? (Location?)Location : null;
 
     /// <summary>Gets the value determining whether the item is unreferenced.</summary>
     /// <typeparam name="TArchipelago">The type of value to check.</typeparam>
@@ -286,4 +302,35 @@ public sealed partial class Logic(
             ExpressionType.NotEqual or ExpressionType.Not => "!=",
             _ => "=",
         };
+
+    [Pure]
+    static Category? FindAnyUnreferencedCategory(ImmutableArray<Category> x, Dictionary<string, Category> collection) =>
+        x.Select(x => IsUnreferenced(x, collection) ? (Category?)x : null).FirstOrDefault(x => x is not null);
+
+    /// <inheritdoc cref="object.ToString"/>
+    /// <param name="state">The state.</param>
+    [Pure]
+    string ToString(bool? state) =>
+        Map(
+            x => $"|{x.Name}|",
+            x => $"|{x.Item.Name}:{x.Count}|",
+            x => $"|{x.Item.Name}:{Percent(x)}|",
+            x => $"|@{x.Name}|",
+            x => $"|@{x.Category.Name}:{x.Count}|",
+            x => $"|@{x.Category.Name}:{Percent(x)}|",
+            state is false
+                ? x => $"({x.Left?.ToString(true)} OR {x.Right?.ToString(true)})"
+                : x => $"{x.Left?.ToString(true)} OR {x.Right?.ToString(true)}",
+            state is true
+                ? x => $"({x.Left?.ToString(false)} AND {x.Right?.ToString(false)})"
+                : x => $"{x.Left?.ToString(false)} AND {x.Right?.ToString(false)}",
+            x => $"{{canReachLocation({x.Name})}}",
+            x => $"{{{nameof(Builtin.ItemValue)}({x.PhantomItem}:{x.Count})}}",
+            x => $"{{{nameof(Builtin.OptOne)}({x})}}",
+            x => $"{{{nameof(Builtin.OptAll)}({x})}}",
+            x => $"{{{nameof(Builtin.YamlEnabled)}({x})}}",
+            x => $"{{{nameof(Builtin.YamlDisabled)}({x})}}",
+            x => $"{{{nameof(Builtin.YamlCompare)}({x.Yaml} {Symbol(x.Comparator)} {x.Count})}}",
+            x => $"{{{x.Name}({x.Args})}}"
+        );
 }

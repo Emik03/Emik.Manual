@@ -5,6 +5,9 @@ namespace Emik.Manual.Domains;
 /// <seealso href="https://github.com/ManualForArchipelago/Manual/blob/main/docs/syntax/requires.md#bundled-functions"/>
 public enum Builtin : byte
 {
+    /// <summary>Can the player reach the given location?</summary>
+    CanReachLocation,
+
     /// <summary>Checks if you've collected the specified value of a value-based item.</summary>
     /// <remarks><para>A value-based item is an item that is defined within <see cref="Item.GiveItems"/>.</para></remarks>
     /// <seealso href="https://github.com/ManualForArchipelago/Manual/blob/main/docs/syntax/requires.md#itemvaluevaluenamecount"/>
@@ -37,4 +40,7 @@ public enum Builtin : byte
     /// </para></remarks>
     /// <seealso href="https://github.com/ManualForArchipelago/Manual/blob/main/docs/syntax/requires.md#yamlcompareoption_name-comparator_symbol-value"/>
     YamlCompare,
+
+    /// <summary>Indicates a custom function, which deviates from the base functionality of Manual worlds.</summary>
+    Custom,
 }
