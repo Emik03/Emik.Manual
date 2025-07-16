@@ -143,19 +143,19 @@ public sealed partial class Logic(
     public static Logic? operator |(Logic? l, Logic? r) =>
         l is null ? l.Check(r) : // Identity Law
         r is null ? r.Check(l) :
-        l.Commutative(r) ? l.Check(r) : // Idempotent Law
+        l.UnorderedEquals(r) ? l.Check(r) : // Idempotent Law
         //    Input  -> Commutative Law -> Idempotent Law
         // A + B + A ->    A + A + B    ->     A + B
-        l is { IsOr: true, Or: var (oll, olr) } && (oll.Commutative(r) || olr.Commutative(r)) ? l.Check(r) :
+        l is { IsOr: true, Or: var (oll, olr) } && (oll.UnorderedEquals(r) || olr.UnorderedEquals(r)) ? l.Check(r) :
         //    Input  -> Idempotent Law
         // A + A + B ->     A + B
-        r is { IsOr: true, Or: var (orl, orr) } && (orl.Commutative(r) || orr.Commutative(r)) ? r.Check(l) :
+        r is { IsOr: true, Or: var (orl, orr) } && (orl.UnorderedEquals(r) || orr.UnorderedEquals(r)) ? r.Check(l) :
         //    Input    ->  Commutative Law  -> Absorption Law
         // (A * B) + A ->    A + (A * B)    ->       A
-        l is { IsAnd: true, And: var (all, alr) } && (all.Commutative(r) || alr.Commutative(r)) ? r.Check(l) :
+        l is { IsAnd: true, And: var (all, alr) } && (all.UnorderedEquals(r) || alr.UnorderedEquals(r)) ? r.Check(l) :
         //    Input    -> Absorption Law
         // A + (A * B) ->       A
-        r is { IsAnd: true, And: var (arl, arr) } && (arl.Commutative(r) || arr.Commutative(r)) ? l.Check(r) :
+        r is { IsAnd: true, And: var (arl, arr) } && (arl.UnorderedEquals(r) || arr.UnorderedEquals(r)) ? l.Check(r) :
         // This code was never in the bible.
         l is { IsOr: true, Or: var (olll, olrl) } && (olrl | r) is { IsOptimized: true } ll ? OfOr(ll, olll) :
         l is { IsOr: true, Or: var (ollr, olrr) } && (ollr | r) is { IsOptimized: true } rl ? OfOr(rl, olrr) :
@@ -173,21 +173,21 @@ public sealed partial class Logic(
     public static Logic? operator &(Logic? l, Logic? r) =>
         l is null ? r.Check(l) : // Annulment Law
         r is null ? l.Check(r) :
-        l.Commutative(r) ? l.Check(r) : // Idempotent Law
+        l.UnorderedEquals(r) ? l.Check(r) : // Idempotent Law
         //    Input    ->  Commutative Law -> Absorption Law
         // (A + B) * A ->    A * (A + B)   ->       A
         l is { IsOr: true, Or: var (oll, olr) } &&
-        (oll.Commutative(r) || olr.Commutative(r)) ? r.Check(l) :
+        (oll.UnorderedEquals(r) || olr.UnorderedEquals(r)) ? r.Check(l) :
         //    Input    ->  Absorption Law
         // A * (A + B) ->        A
         r is { IsOr: true, Or: var (orl, orr) } &&
-        (orl.Commutative(r) || orr.Commutative(r)) ? l.Check(r) :
+        (orl.UnorderedEquals(r) || orr.UnorderedEquals(r)) ? l.Check(r) :
         //   Input   -> Commutative Law -> Idempotent Law
         // A * B * A ->    A * A * B    ->     A * B
-        l is { IsAnd: true, And: var (all, alr) } && (all.Commutative(r) || alr.Commutative(r)) ? l.Check(r) :
+        l is { IsAnd: true, And: var (all, alr) } && (all.UnorderedEquals(r) || alr.UnorderedEquals(r)) ? l.Check(r) :
         //   Input   -> Idempotent Law
         // A * A * B ->     A * B
-        r is { IsAnd: true, And: var (arl, arr) } && (arl.Commutative(r) || arr.Commutative(r)) ? r.Check(l) :
+        r is { IsAnd: true, And: var (arl, arr) } && (arl.UnorderedEquals(r) || arr.UnorderedEquals(r)) ? r.Check(l) :
         // This code was never in the bible.
         l is { IsAnd: true, And: var (alll, alrl) } && (alll & r) is { IsOptimized: true } ll ? OfAnd(ll, alrl) :
         l is { IsAnd: true, And: var (allr, alrr) } && (allr & r) is { IsOptimized: true } rl ? OfAnd(rl, alrr) :
