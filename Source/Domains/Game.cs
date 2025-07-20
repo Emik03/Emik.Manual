@@ -428,7 +428,8 @@ public readonly partial record struct Game(
         client.DefaultRequestHeaders.Add("User-Agent", ".NET Runtime Application");
         var json = await client.GetFromJsonAsync<JsonObject>(Api, token);
         var url = json?["assets"]?[0]?["browser_download_url"]?.GetValue<string>();
-        return await client.GetStreamAsync(url ?? throw new InvalidOperationException(Error), token);
+        _ = url ?? throw new InvalidOperationException(Error);
+        return await client.GetStreamAsync(url, token).ConfigureAwait(false);
     }
 
     /// <summary>Gets the number of times the item is guaranteed to be non-local.</summary>
