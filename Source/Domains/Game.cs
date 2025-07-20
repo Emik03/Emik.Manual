@@ -308,7 +308,7 @@ public readonly partial record struct Game(
             var rent = ArrayPool<byte>.Shared.Rent(Encoding.UTF8.GetByteCount(json));
             await using MemoryStream reader = new(rent, 0, Encoding.UTF8.GetBytes(json, rent), false);
             await using var writer = zip.CreateEntry($"{name}/{path}").Open();
-            await reader.CopyToAsync(writer, token);
+            await reader.CopyToAsync(writer, token).ConfigureAwait(false);
             ArrayPool<byte>.Shared.Return(rent);
         }
 
@@ -327,7 +327,7 @@ public readonly partial record struct Game(
             {
                 await using var entryReader = entry.Open();
                 await using var entryWriter = writer.CreateEntry($"{name}/{e}").Open();
-                await entryReader.CopyToAsync(entryWriter, token);
+                await entryReader.CopyToAsync(entryWriter, token).ConfigureAwait(false);
             }
 #pragma warning disable CA2025
         var game = CopyToAsync(writer, "data/game.json", Json([this], regions), token);
@@ -426,7 +426,7 @@ public readonly partial record struct Game(
 
         using HttpClient client = new();
         client.DefaultRequestHeaders.Add("User-Agent", ".NET Runtime Application");
-        var json = await client.GetFromJsonAsync<JsonObject>(Api, token);
+        var json = await client.GetFromJsonAsync<JsonObject>(Api, token).ConfigureAwait(false);
         var url = json?["assets"]?[0]?["browser_download_url"]?.GetValue<string>();
         _ = url ?? throw new InvalidOperationException(Error);
         return await client.GetStreamAsync(url, token).ConfigureAwait(false);
