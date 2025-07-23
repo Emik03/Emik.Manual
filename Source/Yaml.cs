@@ -4,6 +4,7 @@ namespace Emik.Manual;
 /// <summary>Represents a yaml setting.</summary>
 /// <param name="Name">The name of the value.</param>
 public readonly partial record struct Yaml([Match(Yaml.DisallowedChars, true)] Chars Name)
+    : IComparisonOperators<Yaml, int, Logic>, IEquatable<object>
 {
     /// <summary>The characters that are disallowed.</summary>
     [StringSyntax(StringSyntaxAttribute.Regex)]
@@ -18,20 +19,20 @@ public readonly partial record struct Yaml([Match(Yaml.DisallowedChars, true)] C
     /// Whether to use <see cref="Builtin.YamlEnabled"/> or <see cref="Builtin.YamlDisabled"/>.
     /// </param>
     [Pure]
-    public Logic this[bool enabled] => enabled ? Logic.OfEnabled(this) : Logic.OfDisabled(this);
+    public Logic this[bool enabled] => enabled ? Logic.Enabled(this) : Logic.Disabled(this);
 
     /// <summary>Creates the <see cref="Logic"/> that requires this value be greater than the value provided.</summary>
     /// <param name="count">The threshold.</param>
     [Pure]
     public Logic this[int count] => this >= count;
 
-    /// <summary>Gets itself in <see cref="Logic.OfDisabled"/>.</summary>
+    /// <summary>Gets itself in <see cref="Logic.Disabled"/>.</summary>
     [Pure]
-    public Logic Disabled => Logic.OfDisabled(this);
+    public Logic Disabled => Logic.Disabled(this);
 
-    /// <summary>Gets itself in <see cref="Logic.OfEnabled"/>.</summary>
+    /// <summary>Gets itself in <see cref="Logic.Enabled"/>.</summary>
     [Pure]
-    public Logic Enabled => Logic.OfEnabled(this);
+    public Logic Enabled => Logic.Enabled(this);
 
     /// <summary>
     /// Implicitly converts the <see name="char"/> <see cref="Array"/> to the <see cref="Yaml"/>.
@@ -76,91 +77,88 @@ public readonly partial record struct Yaml([Match(Yaml.DisallowedChars, true)] C
     public static implicit operator ReadOnlyMemory<char>(Yaml yaml) => yaml.Name;
 
     /// <summary>Creates the <see cref="Logic"/> determining whether the value is equal.</summary>
-    /// <param name="left">The value to compare.</param>
-    /// <param name="right">The constant to compare it to.</param>
+    /// <param name="l">The value to compare.</param>
+    /// <param name="r">The constant to compare it to.</param>
     /// <returns>The new <see cref="Logic"/> instance.</returns>
     [Pure]
-    public static Logic operator ==(Yaml left, int right) => Logic.OfYamlCompare(left, ExpressionType.Equal, right);
+    public static Logic operator ==(Yaml l, int r) => new(l.Name, r, Logic.Kind.YamlEqual);
 
     /// <summary>Creates the <see cref="Logic"/> determining whether the value is not equal.</summary>
-    /// <param name="left">The value to compare.</param>
-    /// <param name="right">The constant to compare it to.</param>
+    /// <param name="l">The value to compare.</param>
+    /// <param name="r">The constant to compare it to.</param>
     /// <returns>The new <see cref="Logic"/> instance.</returns>
     [Pure]
-    public static Logic operator !=(Yaml left, int right) => Logic.OfYamlCompare(left, ExpressionType.NotEqual, right);
+    public static Logic operator !=(Yaml l, int r) => new(l.Name, r, Logic.Kind.YamlNotEqual);
 
     /// <summary>Creates the <see cref="Logic"/> determining whether the value is greater than.</summary>
-    /// <param name="left">The value to compare.</param>
-    /// <param name="right">The constant to compare it to.</param>
+    /// <param name="l">The value to compare.</param>
+    /// <param name="r">The constant to compare it to.</param>
     /// <returns>The new <see cref="Logic"/> instance.</returns>
     [Pure]
-    public static Logic operator >(Yaml left, int right) =>
-        Logic.OfYamlCompare(left, ExpressionType.GreaterThan, right);
+    public static Logic operator >(Yaml l, int r) => new(l.Name, r, Logic.Kind.YamlGreaterThan);
 
     /// <summary>Creates the <see cref="Logic"/> determining whether the value is less than or equal.</summary>
-    /// <param name="left">The value to compare.</param>
-    /// <param name="right">The constant to compare it to.</param>
+    /// <param name="l">The value to compare.</param>
+    /// <param name="r">The constant to compare it to.</param>
     /// <returns>The new <see cref="Logic"/> instance.</returns>
     [Pure]
-    public static Logic operator >=(Yaml left, int right) =>
-        Logic.OfYamlCompare(left, ExpressionType.GreaterThanOrEqual, right);
+    public static Logic operator >=(Yaml l, int r) => new(l.Name, r, Logic.Kind.YamlGreaterThanOrEqual);
 
     /// <summary>Creates the <see cref="Logic"/> determining whether the value is less than.</summary>
-    /// <param name="left">The value to compare.</param>
-    /// <param name="right">The constant to compare it to.</param>
+    /// <param name="l">The value to compare.</param>
+    /// <param name="r">The constant to compare it to.</param>
     /// <returns>The new <see cref="Logic"/> instance.</returns>
     [Pure]
-    public static Logic operator <(Yaml left, int right) => Logic.OfYamlCompare(left, ExpressionType.LessThan, right);
+    public static Logic operator <(Yaml l, int r) => new(l.Name, r, Logic.Kind.YamlLessThan);
 
     /// <summary>Creates the <see cref="Logic"/> determining whether the value is greater than or equal.</summary>
-    /// <param name="left">The value to compare.</param>
-    /// <param name="right">The constant to compare it to.</param>
+    /// <param name="l">The value to compare.</param>
+    /// <param name="r">The constant to compare it to.</param>
     /// <returns>The new <see cref="Logic"/> instance.</returns>
     [Pure]
-    public static Logic operator <=(Yaml left, int right) =>
-        Logic.OfYamlCompare(left, ExpressionType.LessThanOrEqual, right);
+    public static Logic operator <=(Yaml l, int r) => new(l.Name, r, Logic.Kind.YamlLessThanOrEqual);
 
     /// <summary>Creates the <see cref="Logic"/> determining whether the value is equal.</summary>
-    /// <param name="left">The constant to compare it to.</param>
-    /// <param name="right">The value to compare.</param>
+    /// <param name="l">The constant to compare it to.</param>
+    /// <param name="r">The value to compare.</param>
     /// <returns>The new <see cref="Logic"/> instance.</returns>
     [Pure]
-    public static Logic operator ==(int left, Yaml right) => right == left;
+    public static Logic operator ==(int l, Yaml r) => r == l;
 
     /// <summary>Creates the <see cref="Logic"/> determining whether the value is not equal.</summary>
-    /// <param name="left">The constant to compare it to.</param>
-    /// <param name="right">The value to compare.</param>
+    /// <param name="l">The constant to compare it to.</param>
+    /// <param name="r">The value to compare.</param>
     /// <returns>The new <see cref="Logic"/> instance.</returns>
     [Pure]
-    public static Logic operator !=(int left, Yaml right) => right != left;
+    public static Logic operator !=(int l, Yaml r) => r != l;
 
     /// <summary>Creates the <see cref="Logic"/> determining whether the value is greater than or equal.</summary>
-    /// <param name="left">The constant to compare it to.</param>
-    /// <param name="right">The value to compare.</param>
+    /// <param name="l">The constant to compare it to.</param>
+    /// <param name="r">The value to compare.</param>
     /// <returns>The new <see cref="Logic"/> instance.</returns>
     [Pure]
-    public static Logic operator >=(int left, Yaml right) => right <= left;
+    public static Logic operator >=(int l, Yaml r) => r <= l;
 
     /// <summary>Creates the <see cref="Logic"/> determining whether the value is greater than.</summary>
-    /// <param name="left">The constant to compare it to.</param>
-    /// <param name="right">The value to compare.</param>
+    /// <param name="l">The constant to compare it to.</param>
+    /// <param name="r">The value to compare.</param>
     /// <returns>The new <see cref="Logic"/> instance.</returns>
     [Pure]
-    public static Logic operator >(int left, Yaml right) => right < left;
+    public static Logic operator >(int l, Yaml r) => r < l;
 
     /// <summary>Creates the <see cref="Logic"/> determining whether the value is less than or equal.</summary>
-    /// <param name="left">The constant to compare it to.</param>
-    /// <param name="right">The value to compare.</param>
+    /// <param name="l">The constant to compare it to.</param>
+    /// <param name="r">The value to compare.</param>
     /// <returns>The new <see cref="Logic"/> instance.</returns>
     [Pure]
-    public static Logic operator <=(int left, Yaml right) => right >= left;
+    public static Logic operator <=(int l, Yaml r) => r >= l;
 
     /// <summary>Creates the <see cref="Logic"/> determining whether the value is less than.</summary>
-    /// <param name="left">The constant to compare it to.</param>
-    /// <param name="right">The value to compare.</param>
+    /// <param name="l">The constant to compare it to.</param>
+    /// <param name="r">The value to compare.</param>
     /// <returns>The new <see cref="Logic"/> instance.</returns>
     [Pure]
-    public static Logic operator <(int left, Yaml right) => right > left;
+    public static Logic operator <(int l, Yaml r) => r > l;
 
     /// <inheritdoc cref="Json(ReadOnlySpan{Yaml})"/>
     [Pure]

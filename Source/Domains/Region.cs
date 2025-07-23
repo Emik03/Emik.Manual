@@ -30,7 +30,7 @@ public readonly partial record struct Region(
     bool IsStarting = false,
     ImmutableArray<Passage> Entrances = default,
     ImmutableArray<Passage> Exits = default
-) : IAddTo, IArchipelago<Region>
+) : IAddTo, IArchipelago<Region>, IEqualityOperators<Region, Region, bool>, IEquatable<object>
 {
     /// <inheritdoc />
     [Pure]
@@ -41,7 +41,11 @@ public readonly partial record struct Region(
     public static implicit operator Region(ReadOnlyMemory<char> name) => new(name);
 
     /// <inheritdoc />
-    void IAddTo.CopyTo([NotNullIfNotNull(nameof(value))] ref JsonNode? value, IReadOnlyCollection<Region>? regions)
+    void IAddTo.CopyTo(
+        [NotNullIfNotNull(nameof(value))] ref JsonNode? value,
+        Dictionary<string, Location>? locations,
+        Dictionary<string, Region>? regions
+    )
     {
         JsonObject obj = [];
 
@@ -52,13 +56,13 @@ public readonly partial record struct Region(
             obj["connects_to"] = IArchipelago<Region>.Json(ConnectsTo);
 
         if (!Exits.IsDefaultOrEmpty)
-            obj["exit_requires"] = Json(Exits, regions);
+            obj["exit_requires"] = Json(Exits, locations, regions);
 
         if (!Entrances.IsDefaultOrEmpty)
-            obj["entrance_requires"] = Json(Entrances, regions);
+            obj["entrance_requires"] = Json(Entrances, locations, regions);
 
         (value ??= new JsonObject())[Name.ToString()] = obj;
-        Logic?.CopyTo(ref value, regions);
+        Logic?.CopyTo(ref value, locations, regions);
     }
 
     /// <inheritdoc />
@@ -87,13 +91,17 @@ public readonly partial record struct Region(
 
     /// <inheritdoc cref="IArchipelago{T}.Json(ImmutableArray{T})"/>
     [Pure]
-    static JsonObject Json(ImmutableArray<Passage> span, IReadOnlyCollection<Region>? regions)
+    static JsonObject Json(
+        ImmutableArray<Passage> span,
+        Dictionary<string, Location>? locations,
+        Dictionary<string, Region>? regions
+    )
     {
         JsonObject ret = [];
 
         foreach (var (region, logic) in span)
             if (logic is not null)
-                ret[region.Name.ToString()] = (logic.ExpandLocations(regions) ?? logic).ToString();
+                ret[region.Name.ToString()] = (logic.ExpandLocations(locations, regions) ?? logic).ToString();
 
         return ret;
     }

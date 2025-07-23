@@ -4,7 +4,10 @@ namespace Emik.Manual.Domains;
 /// <summary>Describes the entry when connecting regions conditionally with logic.</summary>
 /// <param name="Region">The region to connect to.</param>
 /// <param name="Logic">The logic that would enable this connection.</param>
-public sealed partial record Passage(Region Region, Logic? Logic = null) : IAddTo, IArchipelago<Passage>
+public sealed partial record Passage(Region Region, Logic? Logic = null) : IAddTo,
+    IArchipelago<Passage>,
+    IEqualityOperators<Passage, Passage, bool>,
+    IEquatable<object>
 {
     /// <inheritdoc />
     public Chars Name => Region.Name;
@@ -16,10 +19,15 @@ public sealed partial record Passage(Region Region, Logic? Logic = null) : IAddT
     public static implicit operator Passage(ReadOnlyMemory<char> name) => new((Region)name);
 
     /// <inheritdoc />
-    public void CopyTo([NotNullIfNotNull(nameof(value))] ref JsonNode? value, IReadOnlyCollection<Region>? regions)
+    public void CopyTo(
+        [NotNullIfNotNull(nameof(value))] ref JsonNode? value,
+        Dictionary<string, Location>? locations,
+        Dictionary<string, Region>? regions
+    )
     {
         if (Logic is not null)
-            (value ??= new JsonObject())[Name.ToString()] = (Logic.ExpandLocations(regions) ?? Logic).ToString();
+            (value ??= new JsonObject())[Name.ToString()] =
+                (Logic.ExpandLocations(locations, regions) ?? Logic).ToString();
     }
 
     /// <inheritdoc />

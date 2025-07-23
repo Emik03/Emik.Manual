@@ -17,9 +17,9 @@ namespace Emik.Manual.Domains;
 /// <seealso href="https://github.com/ManualForArchipelago/Manual/blob/main/docs/making/game.md#starting-inventory"/>
 [StructLayout(LayoutKind.Auto)]
 public readonly partial record struct StartingItemBlock(
-    CategoryOrItemListBuilder Set = default,
+    CategoryAndItemBuilder Set = default,
     int? Amount = null,
-    ArchipelagoListBuilder<Item> DependsOn = default,
+    ArchipelagoBuilder<Item> DependsOn = default,
     ImmutableArray<Yaml> Yaml = default
 ) : IAddTo
 {
@@ -49,10 +49,14 @@ public readonly partial record struct StartingItemBlock(
     public static implicit operator StartingItemBlock((Item Item, int Amount) item) => new([item.Item], item.Amount);
 
     /// <inheritdoc />
-    public void CopyTo([NotNullIfNotNull(nameof(value))] ref JsonNode? value, IReadOnlyCollection<Region>? regions)
+    public void CopyTo(
+        [NotNullIfNotNull(nameof(value))] ref JsonNode? value,
+        Dictionary<string, Location>? locations,
+        Dictionary<string, Region>? regions
+    )
     {
         JsonNode obj = new JsonObject();
-        Set.CopyTo(ref obj, regions);
+        Set.CopyTo(ref obj, locations, regions);
 
         if (Amount is { } choose)
             obj["random"] = choose;

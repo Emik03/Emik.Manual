@@ -6,7 +6,7 @@ namespace Emik.Manual;
 /// Create a new instance of <see cref="World"/> and start appending with
 /// <see cref="Category(Chars, ImmutableArray{Yaml})"/>, <see cref="Item"/>,
 /// <see cref="Location"/>, and
-/// <see cref="Region(Chars, Logic, ArchipelagoListBuilder{Domains.Region}, bool, ArchipelagoListBuilder{Passage})"/>,
+/// <see cref="Region(Chars, Logic, ArchipelagoBuilder{Domains.Region}, bool, ArchipelagoBuilder{Passage})"/>,
 /// then use the returned value from
 /// <see cref="Game(Chars, Chars, Chars, bool, int, ImmutableArray{StartingItemBlock})"/> to call
 /// <see cref="Domains.Game.WriteAsync"/>, or <see cref="Domains.Game.ZipAsync"/>.
@@ -29,44 +29,46 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
     /// <summary>Contains the generated items.</summary>
     readonly Dictionary<string, Item> _items = new(StringComparer.Ordinal);
 
-    /// <summary>Contains the generated locations.</summary>
-    readonly Dictionary<string, Location> _locations = new(StringComparer.Ordinal);
-
-    /// <summary>Contains the generated regions.</summary>
-    readonly Dictionary<string, Region> _regions = new(StringComparer.Ordinal);
-
     /// <summary>
     /// Gets the categories that have been created so far with
     /// <see cref="Category(Chars, bool, ImmutableArray{Yaml})"/>.
     /// </summary>
     [Pure] // ReSharper disable ReturnTypeCanBeEnumerable.Global
-    public ArchipelagoDictionaryValues<Category> AllCategories => new(_categories);
+    public ValueDictionary<Category> AllCategories => new(_categories);
 
     /// <summary>Gets the items that have been created so far with <see cref="Item"/>.</summary>
     [Pure]
-    public ArchipelagoDictionaryValues<Item> AllItems => new(_items);
+    public ValueDictionary<Item> AllItems => new(_items);
 
     /// <summary>Gets the locations that have been created so far with <see cref="Location"/>.</summary>
     [Pure]
-    public ArchipelagoDictionaryValues<Location> AllLocations => new(_locations);
+    public ValueDictionary<Location> AllLocations => new(Locations);
 
     /// <summary>
     /// Gets the regions that have been created so far with
-    /// <see cref="Region(Chars, Logic, ArchipelagoListBuilder{Domains.Region}, bool, ArchipelagoListBuilder{Passage})"/>.
+    /// <see cref="Region(Chars, Logic, ArchipelagoBuilder{Domains.Region}, bool, ArchipelagoBuilder{Domains.Passage})"/>.
     /// </summary>
     [Pure]
-    public ArchipelagoDictionaryValues<Region> AllRegions => new(_regions);
+    public ValueDictionary<Region> AllRegions => new(Regions);
 
     /// <summary>Contains the characters not allowed in an item name.</summary>
     internal static SearchValues<char> DisallowedItemChars { get; } = SearchValues.Create(":|");
+
+    /// <summary>Contains the generated locations.</summary>
+    [Pure]
+    internal Dictionary<string, Location> Locations { get; } = new(StringComparer.Ordinal);
+
+    /// <summary>Contains the generated regions.</summary>
+    [Pure]
+    internal Dictionary<string, Region> Regions { get; } = new(StringComparer.Ordinal);
 
     /// <inheritdoc />
     [Pure] // ReSharper restore ReturnTypeCanBeEnumerable.Global
     public override string ToString() =>
         $"{_categories.Count.Conjugate("Category", "-ies")
         }, {_items.Count.Conjugate("Item")
-        }, {_locations.Count.Conjugate("Location")
-        }, {_regions.Count.Conjugate("Region")}";
+        }, {Locations.Count.Conjugate("Location")
+        }, {Regions.Count.Conjugate("Region")}";
 
     /// <inheritdoc cref="Category(Chars, bool, ImmutableArray{Yaml})"/>
     public ref readonly Category Category(Chars name) => ref Category(name, false, default);
@@ -202,7 +204,7 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
     [LinqTunnel, Pure]
     public IEnumerable<Item> AllItemsWith(Category category)
     {
-        ArchipelagoListBuilder<Category>.Sync(_categories, ref category, fallback, strict);
+        ArchipelagoBuilder<Category>.Sync(_categories, ref category, fallback, strict);
         return _items.Values.Where(x => x.Categories.Any(Match(category)));
     }
 
@@ -215,7 +217,7 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
     /// match any value in the parameter <paramref name="categories"/>.
     /// </returns>
     [LinqTunnel, Pure]
-    public IEnumerable<Item> AllItemsWithAny(params ArchipelagoListBuilder<Category> categories)
+    public IEnumerable<Item> AllItemsWithAny(params ArchipelagoBuilder<Category> categories)
     {
         categories.Sync(_categories, fallback, strict);
         return _items.Values.Where(x => x.Categories.Any(Match(categories)));
@@ -230,7 +232,7 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
     /// match all values in the parameter <paramref name="categories"/>.
     /// </returns>
     [LinqTunnel, Pure]
-    public IEnumerable<Item> AllItemsWithAll(params ArchipelagoListBuilder<Category> categories)
+    public IEnumerable<Item> AllItemsWithAll(params ArchipelagoBuilder<Category> categories)
     {
         categories.Sync(_categories, fallback, strict);
         return _items.Values.Where(x => x.Categories.All(Match(categories)));
@@ -247,8 +249,8 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
     [LinqTunnel, Pure]
     public IEnumerable<Location> AllLocationsWith(Category category)
     {
-        ArchipelagoListBuilder<Category>.Sync(_categories, ref category, fallback, strict);
-        return _locations.Values.Where(x => x.Categories.Any(Match(category)));
+        ArchipelagoBuilder<Category>.Sync(_categories, ref category, fallback, strict);
+        return Locations.Values.Where(x => x.Categories.Any(Match(category)));
     }
 
     /// <summary>
@@ -260,10 +262,10 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
     /// match any value in the parameter <paramref name="categories"/>.
     /// </returns>
     [LinqTunnel, Pure]
-    public IEnumerable<Location> AllLocationsWithAny(params ArchipelagoListBuilder<Category> categories)
+    public IEnumerable<Location> AllLocationsWithAny(params ArchipelagoBuilder<Category> categories)
     {
         categories.Sync(_categories, fallback, strict);
-        return _locations.Values.Where(x => x.Categories.Any(Match(categories)));
+        return Locations.Values.Where(x => x.Categories.Any(Match(categories)));
     }
 
     /// <summary>
@@ -275,10 +277,10 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
     /// match all values in the parameter <paramref name="categories"/>.
     /// </returns>
     [LinqTunnel, Pure]
-    public IEnumerable<Location> AllLocationsWithAll(params ArchipelagoListBuilder<Category> categories)
+    public IEnumerable<Location> AllLocationsWithAll(params ArchipelagoBuilder<Category> categories)
     {
         categories.Sync(_categories, fallback, strict);
-        return _locations.Values.Where(x => x.Categories.All(Match(categories)));
+        return Locations.Values.Where(x => x.Categories.All(Match(categories)));
     }
 
     /// <summary>Adds or gets the existing item.</summary>
@@ -287,7 +289,7 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
     /// <param name="priority">The importance and placement bias of the item.</param>
     /// <param name="categories">A list of categories to be applied to this item.</param>
     /// <param name="count">Total number of this item that will be in the item pool for randomization.</param>
-    /// <param name="giveItems">A dictionary of values this item has. Used for <see cref="Builtin.ItemValue"/>.</param>
+    /// <param name="giveItems">A dictionary of values this item has. Used for <see cref="Logic.Builtin.ItemValue"/>.</param>
     /// <param name="early">
     /// How many copies of this item are required to be placed somewhere accessible from the start.
     /// </param>
@@ -302,7 +304,7 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
     public ref readonly Item Item(
         [Match(AllowedItemChars, true)] Chars name,
         Priority? priority = null,
-        [InstantHandle] ArchipelagoListBuilder<Category> categories = default,
+        [InstantHandle] ArchipelagoBuilder<Category> categories = default,
         int count = 1,
         ImmutableArray<(Chars PhantomItemName, int Amount)> giveItems = default,
         int early = 0,
@@ -365,16 +367,16 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
     public ref readonly Location Location(
         Chars name,
         Logic? logic = null,
-        [InstantHandle] ArchipelagoListBuilder<Category> categories = default,
+        [InstantHandle] ArchipelagoBuilder<Category> categories = default,
         scoped in Region region = default,
         LocationOptions options = LocationOptions.None,
-        [InstantHandle] CategoryOrItemListBuilder allowList = default,
-        [InstantHandle] CategoryOrItemListBuilder denyList = default,
+        [InstantHandle] CategoryAndItemBuilder allowList = default,
+        [InstantHandle] CategoryAndItemBuilder denyList = default,
         Chars hintEntrance = default,
         int? id = null
     )
     {
-        ref var location = ref Ref(_locations, name, out var exists);
+        ref var location = ref Ref(Locations, name, out var exists);
 
         if (exists)
             return ref location;
@@ -382,7 +384,7 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
         denyList.Sync(_items, fallback, strict);
         allowList.Sync(_items, fallback, strict);
         categories.Sync(_categories, fallback, strict);
-        logic?.ThrowIfUnreferenced(_categories, _items, _locations, strict);
+        logic?.ThrowIfUnset(_categories, _items, Locations, strict);
 
         location = new(
             name,
@@ -401,32 +403,32 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
         return ref location;
     }
 
-    /// <inheritdoc cref="Region(Chars, Logic, ArchipelagoListBuilder{Domains.Region}, bool, ArchipelagoListBuilder{Passage})"/>
-    public ref readonly Region Region(Chars name) => ref Region(name, null, default(ArchipelagoListBuilder<Region>));
+    /// <inheritdoc cref="Region(Chars, Logic, ArchipelagoBuilder{Domains.Region}, bool, ArchipelagoBuilder{Passage})"/>
+    public ref readonly Region Region(Chars name) => ref Region(name, null, default(ArchipelagoBuilder<Region>));
 
-    /// <inheritdoc cref="Region(Chars, Logic, ArchipelagoListBuilder{Domains.Region}, bool, ArchipelagoListBuilder{Passage})"/>
+    /// <inheritdoc cref="Region(Chars, Logic, ArchipelagoBuilder{Domains.Region}, bool, ArchipelagoBuilder{Passage})"/>
     public ref readonly Region Region(Chars name, Logic? logic) =>
-        ref Region(name, logic, default(ArchipelagoListBuilder<Region>));
+        ref Region(name, logic, default(ArchipelagoBuilder<Region>));
 
-    /// <inheritdoc cref="Region(Chars, Logic, ArchipelagoListBuilder{Domains.Region}, bool, ArchipelagoListBuilder{Passage})"/>
+    /// <inheritdoc cref="Region(Chars, Logic, ArchipelagoBuilder{Domains.Region}, bool, ArchipelagoBuilder{Passage})"/>
     // ReSharper disable MethodOverloadWithOptionalParameter
     public ref readonly Region Region(Chars name, Logic? logic, bool isStarting) =>
-        ref Region(name, logic, default(ArchipelagoListBuilder<Region>), isStarting);
+        ref Region(name, logic, default(ArchipelagoBuilder<Region>), isStarting);
 
-    /// <inheritdoc cref="Region(Chars, Logic, ArchipelagoListBuilder{Domains.Region}, bool, ArchipelagoListBuilder{Passage})"/>
+    /// <inheritdoc cref="Region(Chars, Logic, ArchipelagoBuilder{Domains.Region}, bool, ArchipelagoBuilder{Passage})"/>
     // ReSharper disable MethodOverloadWithOptionalParameter
     public ref readonly Region Region(Chars name, bool isStarting) =>
-        ref Region(name, null, default(ArchipelagoListBuilder<Region>), isStarting);
+        ref Region(name, null, default(ArchipelagoBuilder<Region>), isStarting);
 
-    /// <inheritdoc cref="Region(Chars, Logic, ArchipelagoListBuilder{Domains.Region}, bool, ArchipelagoListBuilder{Passage})"/>
+    /// <inheritdoc cref="Region(Chars, Logic, ArchipelagoBuilder{Domains.Region}, bool, ArchipelagoBuilder{Passage})"/>
     // ReSharper disable MethodOverloadWithOptionalParameter
     public ref readonly Region Region(
         Chars name,
         Logic? logic = null,
         bool isStarting = false,
-        [InstantHandle] ArchipelagoListBuilder<Passage> entrances = default
+        [InstantHandle] ArchipelagoBuilder<Passage> entrances = default
     ) =>
-        ref Region(name, logic, default(ArchipelagoListBuilder<Region>), isStarting, entrances);
+        ref Region(name, logic, default(ArchipelagoBuilder<Region>), isStarting, entrances);
 
     /// <summary>Adds or gets the existing region.</summary>
     /// <param name="name">Name of the region.</param>
@@ -453,40 +455,40 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
     public ref readonly Region Region(
         Chars name,
         Logic? logic = null,
-        [InstantHandle] ArchipelagoListBuilder<Region> connectsTo = default,
+        [InstantHandle] ArchipelagoBuilder<Region> connectsTo = default,
         bool isStarting = false,
-        [InstantHandle] ArchipelagoListBuilder<Passage> entrances = default
+        [InstantHandle] ArchipelagoBuilder<Passage> entrances = default
     )
     {
-        ref var region = ref Ref(_regions, name, out var exists);
+        ref var region = ref Ref(Regions, name, out var exists);
 
         if (exists)
             return ref region;
 
-        logic?.ThrowIfUnreferenced(_categories, _items, _locations, strict);
-        connectsTo.Sync(_regions, fallback, strict);
-        entrances.Sync(_categories, _items, _locations, _regions, fallback, strict);
+        logic?.ThrowIfUnset(_categories, _items, Locations, strict);
+        connectsTo.Sync(Regions, fallback, strict);
+        entrances.Sync(_categories, _items, Locations, Regions, fallback, strict);
         region = new(name, logic, connectsTo.ToImmutable(), isStarting, entrances.ToImmutable(), []);
         return ref region;
     }
 
-    /// <inheritdoc cref="Region(Chars, Logic, ArchipelagoListBuilder{Domains.Region}, bool, ArchipelagoListBuilder{Passage})"/>
+    /// <inheritdoc cref="Region(Chars, Logic, ArchipelagoBuilder{Domains.Region}, bool, ArchipelagoBuilder{Passage})"/>
     public ref readonly Region Region(
         Chars name,
         Logic? logic = null,
-        [InstantHandle] ArchipelagoListBuilder<Passage> connectsTo = default,
+        [InstantHandle] ArchipelagoBuilder<Passage> connectsTo = default,
         bool isStarting = false,
-        [InstantHandle] ArchipelagoListBuilder<Passage> entrances = default
+        [InstantHandle] ArchipelagoBuilder<Passage> entrances = default
     )
     {
-        ref var region = ref Ref(_regions, name, out var exists);
+        ref var region = ref Ref(Regions, name, out var exists);
 
         if (exists)
             return ref region;
 
-        logic?.ThrowIfUnreferenced(_categories, _items, _locations, strict);
-        connectsTo.Sync(_categories, _items, _locations, _regions, fallback, strict);
-        entrances.Sync(_categories, _items, _locations, _regions, fallback, strict);
+        logic?.ThrowIfUnset(_categories, _items, Locations, strict);
+        connectsTo.Sync(_categories, _items, Locations, Regions, fallback, strict);
+        entrances.Sync(_categories, _items, Locations, Regions, fallback, strict);
         var exits = connectsTo.ToImmutable();
 
         region = new(
@@ -517,7 +519,7 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
     /// <returns>The yaml comments.</returns>
     [Pure]
     internal string Show<T>(
-        ArchipelagoDictionaryValues<T> all,
+        ValueDictionary<T> all,
         Converter<Category, IEnumerable<T>> allWith,
         int exportedCount,
         int totalCount,
@@ -544,8 +546,9 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
     /// <returns>The <see cref="string"/>.</returns>
     internal JsonObject? Options()
     {
-        (bool IsToggle, string Yaml) Deconstruct((Builtin Context, Yaml Yaml) x) =>
-            (IsToggle: x.Context is Builtin.YamlDisabled or Builtin.YamlEnabled, Yaml: x.Yaml.ToString(strict));
+        (bool IsToggle, string Yaml) Deconstruct((Logic.Builtin Context, Yaml Yaml) x) =>
+            (IsToggle: x.Context is Logic.Builtin.YamlDisabled or Logic.Builtin.YamlEnabled,
+                Yaml: x.Yaml.ToString(strict));
 
         static (JsonObject Object, string Yaml) CreateJsonObject((bool IsToggle, string Yaml) x)
         {
@@ -617,7 +620,7 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
     /// <summary>Gives the function that evaluates whether the category matches any values in the parameter.</summary>
     /// <param name="builder">The <see cref="ImmutableArray{T}"/> containing what to match.</param>
     /// <returns>The function that tests for the <see cref="Domains.Category"/>.</returns>
-    static Func<Category, bool> Match(ArchipelagoListBuilder<Category> builder) =>
+    static Func<Category, bool> Match(ArchipelagoBuilder<Category> builder) =>
         x => builder.Any(y => y.Name.Span.Equals(x.Name.Span, StringComparison.Ordinal));
 
     /// <summary>

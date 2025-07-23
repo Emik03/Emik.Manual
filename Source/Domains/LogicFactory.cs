@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 namespace Emik.Manual.Domains;
 #pragma warning disable MA0016
+using static Logic.Kind;
+
 /// <summary>Provides methods for creating <see cref="Logic"/> instances.</summary>
 public static partial class LogicFactory
 {
@@ -17,7 +19,7 @@ public static partial class LogicFactory
     /// and the parameter <paramref name="strict"/> is <see langword="true"/>.
     /// </exception>
     public static void Sync(
-        this in ArchipelagoListBuilder<Passage> builder,
+        this in ArchipelagoBuilder<Passage> builder,
         Dictionary<string, Category> categories,
         Dictionary<string, Item> items,
         Dictionary<string, Location> locations,
@@ -32,36 +34,54 @@ public static partial class LogicFactory
         for (int i = 0, count = builder.Count; i < count; i++)
         {
             var (region, logic) = builder[i];
-            ArchipelagoListBuilder<Region>.Sync(regions, ref region, fallback, strict);
-            logic?.ThrowIfUnreferenced(categories, items, locations, strict);
+            ArchipelagoBuilder<Region>.Sync(regions, ref region, fallback, strict);
+            logic?.ThrowIfUnset(categories, items, locations, strict);
         }
     }
 
-    /// <summary>Determines whether logic contains structurally the same data.</summary>
-    /// <param name="left">The logic to compare from.</param>
-    /// <param name="right">The logic to compare to.</param>
-    /// <returns>Whether both instances are equal.</returns>
-    public static bool UnorderedEquals(this Logic? left, Logic? right) =>
-        left == right ||
-        left?.Binary is ({ } ll, { } lr) && // Commutative Law
-        right?.Binary is ({ } rl, { } rr) &&
-        left.IsAnd == right.IsAnd &&
-        (UnorderedEquals(ll, rl) && UnorderedEquals(lr, rr) || UnorderedEquals(ll, rr) && UnorderedEquals(lr, rl));
+    /// <summary>Determines if the instance passed in doesn't contribute to any meaningful logic.</summary>
+    /// <param name="logic">The instance to check.</param>
+    /// <returns>Whether this logic will be inlined.</returns>
+    public static bool IsRedundant([NotNullWhen(false)] this Logic? logic) =>
+        logic is null or { Count: 0, Type: ItemCount or ItemPercent or CategoryCount or CategoryPercent or ItemValue };
+
+    /// <summary>Creates the <see cref="Logic"/> that requires all of the provided categories.</summary>
+    /// <param name="categories">The categories to wrap in <see cref="Logic"/>.</param>
+    /// <returns>The created <see cref="Logic"/>.</returns>
+    public static Logic? And(this IEnumerable<Category> categories) =>
+        categories.Aggregate((Logic?)null, (a, n) => a & n);
 
     /// <summary>Creates the <see cref="Logic"/> that requires all of the provided items.</summary>
     /// <param name="items">The items to wrap in <see cref="Logic"/>.</param>
     /// <returns>The created <see cref="Logic"/>.</returns>
     public static Logic? And(this IEnumerable<Item> items) => items.Aggregate((Logic?)null, (a, n) => a & n);
 
+    /// <summary>Creates the <see cref="Logic"/> that requires all of the provided locations.</summary>
+    /// <param name="locations">The locations to wrap in <see cref="Logic"/>.</param>
+    /// <returns>The created <see cref="Logic"/>.</returns>
+    public static Logic? And(this IEnumerable<Location> locations) =>
+        locations.Aggregate((Logic?)null, (a, n) => a & n);
+
     /// <summary>Creates the <see cref="Logic"/> that requires all provided logic.</summary>
     /// <param name="logic">The items to wrap in <see cref="Logic"/>.</param>
     /// <returns>The created <see cref="Logic"/>.</returns>
     public static Logic? And(this IEnumerable<Logic?> logic) => logic.Aggregate((Logic?)null, (a, n) => a & n);
 
+    /// <summary>Creates the <see cref="Logic"/> that requires any of the provided categories.</summary>
+    /// <param name="categories">The categories to wrap in <see cref="Logic"/>.</param>
+    /// <returns>The created <see cref="Logic"/>.</returns>
+    public static Logic? Or(this IEnumerable<Category> categories) =>
+        categories.Aggregate((Logic?)null, (a, n) => a | n);
+
     /// <summary>Creates the <see cref="Logic"/> that requires any of the provided items.</summary>
     /// <param name="items">The items to wrap in <see cref="Logic"/>.</param>
     /// <returns>The created <see cref="Logic"/>.</returns>
     public static Logic? Or(this IEnumerable<Item> items) => items.Aggregate((Logic?)null, (a, n) => a | n);
+
+    /// <summary>Creates the <see cref="Logic"/> that requires any of the provided locations.</summary>
+    /// <param name="locations">The locations to wrap in <see cref="Logic"/>.</param>
+    /// <returns>The created <see cref="Logic"/>.</returns>
+    public static Logic? Or(this IEnumerable<Location> locations) => locations.Aggregate((Logic?)null, (a, n) => a | n);
 
     /// <summary>Creates the <see cref="Logic"/> that requires any provided logic.</summary>
     /// <param name="logic">The items to wrap in <see cref="Logic"/>.</param>
@@ -73,7 +93,12 @@ public static partial class LogicFactory
     /// <param name="right">The logic to discard.</param>
     /// <param name="line">The caller line number to discard.</param>
     /// <returns>Itself.</returns>
-    internal static Logic? Check(this Logic? left, [UsedImplicitly] Logic? right, [CallerLineNumber] int line = 0)
+    [return: NotNullIfNotNull(nameof(left))]
+    internal static Logic? Check(
+        this Logic? left,
+        [UsedImplicitly] Logic? right,
+        [CallerLineNumber, UsedImplicitly] int line = 0
+    )
     {
 #if LOGIC_TRIM_CONSOLE_WRITE
         Console.WriteLine(

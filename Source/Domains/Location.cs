@@ -46,7 +46,7 @@ public readonly partial record struct Location(
     ImmutableArray<Item> ItemDenyList = default,
     Chars HintEntrance = default,
     int? Id = null
-) : IAddTo, IArchipelago<Location>
+) : IAddTo, IArchipelago<Location>, IEqualityOperators<Location, Location, bool>, IEquatable<object>
 {
     /// <inheritdoc />
     [Pure]
@@ -56,12 +56,40 @@ public readonly partial record struct Location(
     [Pure]
     public static implicit operator Location(ReadOnlyMemory<char> name) => new(name);
 
+    /// <inheritdoc cref="Logic.op_BitwiseAnd"/>
+    [Pure]
+    public static Logic operator &(Location left, Location right) => new Logic(left) & new Logic(right);
+
+    /// <inheritdoc cref="Logic.op_BitwiseAnd"/>
+    [Pure]
+    public static Logic operator &(Location left, Logic? right) => new Logic(left) & right;
+
+    /// <inheritdoc cref="Logic.op_BitwiseAnd"/>
+    [Pure]
+    public static Logic operator &(Logic? left, Location right) => left & new Logic(right);
+
+    /// <inheritdoc cref="Logic.op_BitwiseOr"/>
+    [Pure]
+    public static Logic operator |(Location left, Location right) => new Logic(left) | new Logic(right);
+
+    /// <inheritdoc cref="Logic.op_BitwiseOr"/>
+    [Pure]
+    public static Logic operator |(Location left, Logic? right) => new Logic(left) | right;
+
+    /// <inheritdoc cref="Logic.op_BitwiseOr"/>
+    [Pure]
+    public static Logic operator |(Logic? left, Location right) => left | new Logic(right);
+
     /// <inheritdoc />
     // ReSharper disable once CognitiveComplexity
-    void IAddTo.CopyTo([NotNullIfNotNull(nameof(value))] ref JsonNode? value, IReadOnlyCollection<Region>? regions)
+    void IAddTo.CopyTo(
+        [NotNullIfNotNull(nameof(value))] ref JsonNode? value,
+        Dictionary<string, Location>? locations,
+        Dictionary<string, Region>? regions
+    )
     {
         JsonNode obj = new JsonObject { ["name"] = ToString() };
-        Logic?.CopyTo(ref obj, regions);
+        Logic?.CopyTo(ref obj, locations, regions);
 
         if (Id is { } id)
             obj["id"] = id;

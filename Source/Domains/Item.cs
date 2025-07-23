@@ -23,7 +23,7 @@ public readonly partial record struct Item(
     int Early = 0,
     int LocalEarly = 0,
     int? Id = null
-) : IAddTo, IArchipelago<Item>
+) : IAddTo, IArchipelago<Item>, IEqualityOperators<Item, Item, bool>, IEquatable<object>
 {
     /// <summary>Makes a requirement that the item should be obtained multiple times.</summary>
     /// <param name="count">The count to times to fulfill the requirement.</param>
@@ -33,16 +33,32 @@ public readonly partial record struct Item(
     [Pure]
     public Logic? this[int count] =>
         count is 0 ? null :
-        (uint)count <= (uint)Count ? Logic.OfItemCount(this, count) :
+        (uint)count <= (uint)Count ? new Logic(this, count) :
         throw new ArgumentOutOfRangeException(nameof(count), count, $"Cannot have {count} amounts of {Name}.");
 
     /// <summary>Makes a requirement that all of this item should be obtained.</summary>
     [Pure]
-    public Logic All => Logic.OfItemPercent(this, new Logic.Explicit<int>(100));
+    public Logic All
+    {
+        get
+        {
+            var logic = Logic.Percent(this, 100);
+            Debug.Assert(logic is not null); // We pass a percent that is greater than zero.
+            return logic;
+        }
+    }
 
     /// <summary>Makes a requirement that half of this item should be obtained.</summary>
     [Pure]
-    public Logic Half => Logic.OfItemPercent(this, new Logic.Explicit<int>(50));
+    public Logic Half
+    {
+        get
+        {
+            var logic = Logic.Percent(this, 50);
+            Debug.Assert(logic is not null); // We pass a percent that is greater than zero.
+            return logic;
+        }
+    }
 
     /// <inheritdoc />
     [Pure]
@@ -54,15 +70,35 @@ public readonly partial record struct Item(
 
     /// <inheritdoc cref="Logic.op_BitwiseAnd"/>
     [Pure]
-    public static Logic operator &(Item l, Item r) => Logic.OfAnd(l, r);
+    public static Logic operator &(Item left, Item right) => new Logic(left) & new Logic(right);
+
+    /// <inheritdoc cref="Logic.op_BitwiseAnd"/>
+    [Pure]
+    public static Logic operator &(Item left, Logic? right) => new Logic(left) & right;
+
+    /// <inheritdoc cref="Logic.op_BitwiseAnd"/>
+    [Pure]
+    public static Logic operator &(Logic? left, Item right) => left & new Logic(right);
 
     /// <inheritdoc cref="Logic.op_BitwiseOr"/>
     [Pure]
-    public static Logic operator |(Item l, Item r) => Logic.OfOr(l, r);
+    public static Logic operator |(Item left, Item right) => new Logic(left) | new Logic(right);
+
+    /// <inheritdoc cref="Logic.op_BitwiseOr"/>
+    [Pure]
+    public static Logic operator |(Item left, Logic? right) => new Logic(left) | right;
+
+    /// <inheritdoc cref="Logic.op_BitwiseOr"/>
+    [Pure]
+    public static Logic operator |(Logic? left, Item right) => left | new Logic(right);
 
     /// <inheritdoc />
     // ReSharper disable once CognitiveComplexity
-    void IAddTo.CopyTo([NotNullIfNotNull(nameof(value))] ref JsonNode? value, IReadOnlyCollection<Region>? regions)
+    void IAddTo.CopyTo(
+        [NotNullIfNotNull(nameof(value))] ref JsonNode? value,
+        Dictionary<string, Location>? locations,
+        Dictionary<string, Region>? regions
+    )
     {
         JsonObject obj = new() { ["name"] = ToString() };
 
@@ -133,12 +169,12 @@ public readonly partial record struct Item(
     /// <param name="percent">The percent.</param>
     /// <returns>The new <see cref="Logic"/> instance.</returns>
     [Pure]
-    public Logic? Percent(byte percent) => Logic.OfItemPercent(this, percent);
+    public Logic? Percent(int percent) => Logic.Percent(this, percent);
 
     /// <summary>Makes a requirement that the item should be obtained in at least some threshold percentage.</summary>
     /// <param name="index">The index.</param>
     /// <param name="scaling">The scaling per index.</param>
     /// <returns>The new <see cref="Logic"/> instance.</returns>
     [Pure]
-    public Logic? Percent(double index, double scaling) => Logic.OfItemPercent(this, index, scaling);
+    public Logic? Percent(double index, double scaling) => Logic.Percent(this, index, scaling);
 }

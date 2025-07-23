@@ -4,7 +4,11 @@ namespace Emik.Manual.Domains;
 /// <summary>Represents the <see cref="ReadOnlyMemory{T}"/> of <see cref="char"/>, with implicit conversions.</summary>
 /// <param name="Memory">The characters.</param>
 [StructLayout(LayoutKind.Auto)]
-public readonly partial record struct Chars(ReadOnlyMemory<char> Memory)
+public readonly partial record struct Chars(ReadOnlyMemory<char> Memory) : IComparable,
+    IComparable<object>,
+    IComparable<Chars>,
+    IComparisonOperators<Chars, Chars, bool>,
+    IEquatable<object>
 {
     /// <inheritdoc cref="ReadOnlySpan{T}.this"/>
     public ref readonly char this[int i]
@@ -76,6 +80,22 @@ public readonly partial record struct Chars(ReadOnlyMemory<char> Memory)
     [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
     public static implicit operator ReadOnlyMemory<char>(Chars chars) => chars.Memory;
 
+    /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
+    public static bool operator >(Chars left, Chars right) => left.CompareTo(right) > 0;
+
+    /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
+    public static bool operator >=(Chars left, Chars right) => left.CompareTo(right) >= 0;
+
+    /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
+    public static bool operator <(Chars left, Chars right) => left.CompareTo(right) < 0;
+
+    /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
+    public static bool operator <=(Chars left, Chars right) => left.CompareTo(right) <= 0;
+
     /// <inheritdoc cref="ReadOnlyMemory{T}.CopyTo"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void CopyTo(Memory<char> destination) => Memory.CopyTo(destination);
@@ -91,6 +111,14 @@ public readonly partial record struct Chars(ReadOnlyMemory<char> Memory)
     /// <inheritdoc cref="ReadOnlyMemory{T}.ToArray"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
     public char[] ToArray() => Memory.ToArray();
+
+    /// <inheritdoc cref="IComparable.CompareTo"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
+    public int CompareTo(object? other) => CompareTo(other is Chars chars ? chars : default);
+
+    /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
+    public int CompareTo(Chars other) => other.Span.CompareTo(other.Span, StringComparison.Ordinal);
 
     /// <inheritdoc />
     [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
@@ -172,6 +200,6 @@ public readonly partial record struct Chars(ReadOnlyMemory<char> Memory)
     public MemoryHandle Pin() => Memory.Pin();
 
     /// <summary>Gets an enumerator for this span.</summary>
-    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
     public ReadOnlySpan<char>.Enumerator GetEnumerator() => Span.GetEnumerator();
 }

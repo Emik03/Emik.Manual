@@ -21,7 +21,7 @@ public readonly partial record struct Game(
     bool DeathLink = false,
     int StartingIndex = 1,
     params ImmutableArray<StartingItemBlock> StartingItems
-) : IAddTo, IArchipelago<Game>
+) : IAddTo, IArchipelago<Game>, IEqualityOperators<Game, Game, bool>, IEquatable<object>
 {
     /// <inheritdoc />
     [Pure]
@@ -32,7 +32,11 @@ public readonly partial record struct Game(
     public static implicit operator Game(ReadOnlyMemory<char> name) => new(null, name);
 
     /// <inheritdoc />
-    void IAddTo.CopyTo([NotNullIfNotNull(nameof(value))] ref JsonNode? value, IReadOnlyCollection<Region>? regions)
+    void IAddTo.CopyTo(
+        [NotNullIfNotNull(nameof(value))] ref JsonNode? value,
+        Dictionary<string, Location>? locations,
+        Dictionary<string, Region>? regions
+    )
     {
         value ??= new JsonObject
         {
@@ -54,7 +58,7 @@ public readonly partial record struct Game(
         JsonNode? node = null;
 
         foreach (var startingItem in StartingItems)
-            startingItem.CopyTo(ref node, regions);
+            startingItem.CopyTo(ref node, locations, regions);
 
         if (node is not null)
             value["starting_items"] = node;
@@ -241,33 +245,35 @@ public readonly partial record struct Game(
     /// <param name="listChecks">
     /// When specified, additionally writes the template <c>.yaml</c>, passing this parameter in <see cref="Template"/>.
     /// </param>
-    /// <param name="expandLocations">
-    /// Whether to replace all uses of <see cref="Builtin.CanReachLocation"/> by expanding it into the equivalent
-    /// logic, since use of <see cref="Builtin.CanReachLocation"/> can dramatically increase generation time.
+    /// <param name="expand">
+    /// Whether to replace all uses of <see cref="Logic.Builtin.CanReachLocation"/> by expanding it into the equivalent
+    /// logic, since use of <see cref="Logic.Builtin.CanReachLocation"/> can dramatically increase generation time.
     /// Expansion will make this method take longer, and can make the resulting logic strings difficult to read.
+    /// Having this set to <see langword="false"/> will make any use of <see cref="Logic.Kind.Region"/> use a
+    /// non-standard function <c>canReachRegion</c>, which must be implemented in Python.
     /// </param>
     /// <param name="token">The cancellation token.</param>
     /// <exception cref="IOException">A file could not be written.</exception>
     public Task WriteAsync(
         string? directory = null,
         bool? listChecks = true,
-        bool expandLocations = false,
+        bool expand = false,
         CancellationToken token = default
     )
     {
         Directory.CreateDirectory(directory ??= Path.Join(Environment.CurrentDirectory, "data"));
-        var regions = expandLocations ? World?.AllRegions.Values.WithCount(World.AllRegions.Count) : null;
-        var game = DiskAsync(Path.Join(directory, "game.json"), Json([this], regions), token);
+        var (locations, regions) = expand ? (World?.Locations, World?.Regions) : default;
+        var game = FsAsync(Path.Join(directory, "game.json"), Json([this], locations, regions), token);
 
         return World is null
             ? game
             : Task.WhenAll(
-                DiskAsync(Path.Join(directory, $"{FullName()}.yaml"), listChecks is { } ls ? Template(ls) : "", token),
-                DiskAsync(Path.Join(directory, "categories.json"), Json(World.AllCategories, regions), token),
-                DiskAsync(Path.Join(directory, "locations.json"), Json(World.AllLocations, regions), token),
-                DiskAsync(Path.Join(directory, "regions.json"), Json(World.AllRegions, regions), token),
-                DiskAsync(Path.Join(directory, "options.json"), World.OptionsString(), token),
-                DiskAsync(Path.Join(directory, "items.json"), Json(World.AllItems, regions), token),
+                FsAsync(Path.Join(directory, $"{FullName()}.yaml"), listChecks is { } ls ? Template(ls) : "", token),
+                FsAsync(Path.Join(directory, "categories.json"), Json(World.AllCategories, locations, regions), token),
+                FsAsync(Path.Join(directory, "locations.json"), Json(World.AllLocations, locations, regions), token),
+                FsAsync(Path.Join(directory, "regions.json"), Json(World.AllRegions, locations, regions), token),
+                FsAsync(Path.Join(directory, "options.json"), World.OptionsString(), token),
+                FsAsync(Path.Join(directory, "items.json"), Json(World.AllItems, locations, regions), token),
                 game
             );
     }
@@ -281,9 +287,9 @@ public readonly partial record struct Game(
     /// When specified, writes the template <c>.yaml</c> in the same directory as the parameter
     /// <paramref name="destination"/>, passing this parameter in <see cref="Template"/>.
     /// </param>
-    /// <param name="expandLocations">
-    /// Whether to replace all uses of <see cref="Builtin.CanReachLocation"/> by expanding it into the equivalent
-    /// logic, since use of <see cref="Builtin.CanReachLocation"/> can dramatically increase generation time.
+    /// <param name="expand">
+    /// Whether to replace all uses of <see cref="Logic.Builtin.CanReachLocation"/> by expanding it into the equivalent
+    /// logic, since use of <see cref="Logic.Builtin.CanReachLocation"/> can dramatically increase generation time.
     /// Expansion will make this method take longer, and can make the resulting logic strings difficult to read.
     /// </param>
     /// <param name="token">The cancellation token.</param>
@@ -294,7 +300,7 @@ public readonly partial record struct Game(
         string destination,
         string? apWorld = null,
         bool? listChecks = null,
-        bool expandLocations = false,
+        bool expand = false,
         CancellationToken token = default
     )
     {
@@ -318,7 +324,7 @@ public readonly partial record struct Game(
         using ZipArchive reader = new(await Reader(apWorld, token), ZipArchiveMode.Read),
             writer = new(new FileStream(destination, FileMode.Create, FileAccess.Write), ZipArchiveMode.Create);
 
-        var regions = expandLocations ? World?.AllRegions.Values.WithCount(World.AllRegions.Count) : null;
+        var (locations, regions) = expand ? (World?.Locations, World?.Regions) : default;
 
         foreach (var entry in reader.Entries)
             if (entry.FullName is not [.., '/'] and not [.., '.', 'j', 's', 'o', 'n'] &&
@@ -330,21 +336,21 @@ public readonly partial record struct Game(
                 await entryReader.CopyToAsync(entryWriter, token).ConfigureAwait(false);
             }
 #pragma warning disable CA2025
-        var game = CopyToAsync(writer, "data/game.json", Json([this], regions), token);
+        var game = CopyToAsync(writer, "data/game.json", Json([this], locations, regions), token);
 #pragma warning restore CA2025
         await (World is null
             ? game
             : Task.WhenAll(
-                DiskAsync(
+                FsAsync(
                     Path.Join(Path.GetDirectoryName(destination), $"{FullName()}.yaml"),
-                    listChecks is { } lc ? Template(lc) : null,
+                    listChecks is { } ls ? Template(ls) : null,
                     token
                 ),
-                CopyToAsync(writer, "data/categories.json", Json(World.AllCategories, regions), token),
-                CopyToAsync(writer, "data/locations.json", Json(World.AllLocations, regions), token),
-                CopyToAsync(writer, "data/regions.json", Json(World.AllRegions, regions), token),
+                CopyToAsync(writer, "data/categories.json", Json(World.AllCategories, locations, regions), token),
+                CopyToAsync(writer, "data/locations.json", Json(World.AllLocations, locations, regions), token),
+                CopyToAsync(writer, "data/regions.json", Json(World.AllRegions, locations, regions), token),
                 CopyToAsync(writer, "data/options.json", World.OptionsString(), token),
-                CopyToAsync(writer, "data/items.json", Json(World.AllItems, regions), token),
+                CopyToAsync(writer, "data/items.json", Json(World.AllItems, locations, regions), token),
                 game
             ));
     }
@@ -353,7 +359,7 @@ public readonly partial record struct Game(
     /// <param name="items">The items to check.</param>
     /// <returns>The minimum <see cref="Item.Count"/>.</returns>
     [Pure]
-    static int Min(ArchipelagoListBuilder<Item> items) => items.Aggregate(int.MaxValue, (a, n) => a.Min(n.Count));
+    static int Min(ArchipelagoBuilder<Item> items) => items.Aggregate(int.MaxValue, (a, n) => a.Min(n.Count));
 
     /// <summary>Creates the yaml goal parameter.</summary>
     /// <param name="goals">The list of locations that can be goaled.</param>
@@ -372,10 +378,15 @@ public readonly partial record struct Game(
     /// <summary>Creates the <c>JSON</c> <see cref="string"/> out of the collection.</summary>
     /// <typeparam name="T">The type of collection to enumerate and serialize.</typeparam>
     /// <param name="elements">The collection to enumerate and serialize.</param>
+    /// <param name="locations">The locations.</param>
     /// <param name="regions">The regions.</param>
     /// <returns>The serialized <c>JSON</c> <see cref="string"/> of the parameter <paramref name="elements"/>.</returns>
     [Pure]
-    static string? Json<T>(IEnumerable<T>? elements, IReadOnlyCollection<Region>? regions)
+    static string? Json<T>(
+        IEnumerable<T>? elements,
+        Dictionary<string, Location>? locations,
+        Dictionary<string, Region>? regions
+    )
         where T : IAddTo, IArchipelago<T>
     {
         if (elements is null)
@@ -384,7 +395,7 @@ public readonly partial record struct Game(
         JsonNode? t = null;
 
         foreach (var value in elements)
-            value.CopyTo(ref t, regions);
+            value.CopyTo(ref t, locations, regions);
 
         return t?.ToJsonString(new() { TypeInfoResolver = new DefaultJsonTypeInfoResolver(), WriteIndented = true });
     }
@@ -403,7 +414,7 @@ public readonly partial record struct Game(
     /// <param name="token">The cancellation token.</param>
     /// <returns>The task.</returns>
     [Pure]
-    static Task DiskAsync(string file, string? text, CancellationToken token) =>
+    static Task FsAsync(string file, string? text, CancellationToken token) =>
         text is not null ? File.WriteAllTextAsync(file, text, token) : Task.CompletedTask;
 
     /// <summary>Gets the <see cref="Stream"/> of the latest <c>.apworld</c> from GitHub.</summary>
@@ -458,7 +469,7 @@ public readonly partial record struct Game(
     /// <param name="categories">The categories to check.</param>
     /// <returns>The minimum <see cref="Item.Count"/>.</returns>
     [Pure]
-    int Min(ArchipelagoListBuilder<Category> categories) =>
+    int Min(ArchipelagoBuilder<Category> categories) =>
         World?.AllItemsWithAny(categories).Aggregate(int.MaxValue, (a, n) => a.Min(n.Count)) ?? 0;
 
     /// <summary>Gets the minimum number of items the block will take.</summary>

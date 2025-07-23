@@ -8,7 +8,7 @@ namespace Emik.Manual.Domains;
 /// <seealso href="https://github.com/ManualForArchipelago/Manual/blob/main/docs/syntax/categories-for-items-and-locations.md"/>
 [StructLayout(LayoutKind.Auto)]
 public readonly partial record struct Category(Chars Name, bool IsHidden = false, params ImmutableArray<Yaml> Yaml)
-    : IAddTo, IArchipelago<Category>
+    : IAddTo, IArchipelago<Category>, IEqualityOperators<Category, Category, bool>, IEquatable<object>
 {
     /// <summary>Makes a requirement that the category should be obtained multiple times.</summary>
     /// <param name="count">The count to times to fulfill the requirement.</param>
@@ -16,16 +16,32 @@ public readonly partial record struct Category(Chars Name, bool IsHidden = false
     [Pure]
     public Logic? this[int count] =>
         count is 0 ? null :
-        count > 0 ? Logic.OfCategoryCount(this, count) :
+        count > 0 ? new Logic(this, count) :
         throw new ArgumentOutOfRangeException(nameof(count), count, $"Cannot have {count} amounts of {Name}.");
 
     /// <summary>Makes a requirement that all items with this category should be obtained.</summary>
     [Pure]
-    public Logic All => Logic.OfCategoryPercent(this, new Logic.Explicit<int>(100));
+    public Logic All
+    {
+        get
+        {
+            var logic = Logic.Percent(this, 100);
+            Debug.Assert(logic is not null); // We pass a percent that is greater than zero.
+            return logic;
+        }
+    }
 
     /// <summary>Makes a requirement that half items with this category should be obtained.</summary>
     [Pure]
-    public Logic Half => Logic.OfCategoryPercent(this, new Logic.Explicit<int>(50));
+    public Logic Half
+    {
+        get
+        {
+            var logic = Logic.Percent(this, 50);
+            Debug.Assert(logic is not null); // We pass a percent that is greater than zero.
+            return logic;
+        }
+    }
 
     /// <inheritdoc />
     [Pure]
@@ -35,8 +51,36 @@ public readonly partial record struct Category(Chars Name, bool IsHidden = false
     [Pure]
     public static implicit operator Category(ReadOnlyMemory<char> name) => new(name);
 
+    /// <inheritdoc cref="Logic.op_BitwiseAnd"/>
+    [Pure]
+    public static Logic operator &(Category left, Category right) => new Logic(left) & new Logic(right);
+
+    /// <inheritdoc cref="Logic.op_BitwiseAnd"/>
+    [Pure]
+    public static Logic operator &(Category left, Logic? right) => new Logic(left) & right;
+
+    /// <inheritdoc cref="Logic.op_BitwiseAnd"/>
+    [Pure]
+    public static Logic operator &(Logic? left, Category right) => left & new Logic(right);
+
+    /// <inheritdoc cref="Logic.op_BitwiseOr"/>
+    [Pure]
+    public static Logic operator |(Category left, Category right) => new Logic(left) | new Logic(right);
+
+    /// <inheritdoc cref="Logic.op_BitwiseOr"/>
+    [Pure]
+    public static Logic operator |(Category left, Logic? right) => new Logic(left) | right;
+
+    /// <inheritdoc cref="Logic.op_BitwiseOr"/>
+    [Pure]
+    public static Logic operator |(Logic? left, Category right) => left | new Logic(right);
+
     /// <inheritdoc />
-    void IAddTo.CopyTo([NotNullIfNotNull(nameof(value))] ref JsonNode? value, IReadOnlyCollection<Region>? regions)
+    void IAddTo.CopyTo(
+        [NotNullIfNotNull(nameof(value))] ref JsonNode? value,
+        Dictionary<string, Location>? locations,
+        Dictionary<string, Region>? regions
+    )
     {
         if (!IsHidden && Yaml.IsDefaultOrEmpty)
             return;
@@ -62,7 +106,7 @@ public readonly partial record struct Category(Chars Name, bool IsHidden = false
     /// <param name="percent">The percent.</param>
     /// <returns>The new <see cref="Logic"/> instance.</returns>
     [Pure]
-    public Logic? Percent(int percent) => Logic.OfCategoryPercent(this, percent);
+    public Logic? Percent(int percent) => Logic.Percent(this, percent);
 
     /// <summary>
     /// Makes a requirement that items with this category should be obtained in at least some threshold percentage.
@@ -71,5 +115,5 @@ public readonly partial record struct Category(Chars Name, bool IsHidden = false
     /// <param name="scaling">The scaling per index.</param>
     /// <returns>The new <see cref="Logic"/> instance.</returns>
     [Pure]
-    public Logic? Percent(double index, double scaling) => Logic.OfCategoryPercent(this, index, scaling);
+    public Logic? Percent(double index, double scaling) => Logic.Percent(this, index, scaling);
 }
