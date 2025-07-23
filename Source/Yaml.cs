@@ -16,7 +16,7 @@ public readonly partial record struct Yaml([Match(Yaml.DisallowedChars, true)] C
     /// Creates the <see cref="Logic"/> determining whether this option should be enabled or disabled.
     /// </summary>
     /// <param name="enabled">
-    /// Whether to use <see cref="Builtin.YamlEnabled"/> or <see cref="Builtin.YamlDisabled"/>.
+    /// Whether to use <see cref="Logic.Builtin.YamlEnabled"/> or <see cref="Logic.Builtin.YamlDisabled"/>.
     /// </param>
     [Pure]
     public Logic this[bool enabled] => enabled ? Logic.Enabled(this) : Logic.Disabled(this);

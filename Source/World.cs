@@ -289,7 +289,9 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
     /// <param name="priority">The importance and placement bias of the item.</param>
     /// <param name="categories">A list of categories to be applied to this item.</param>
     /// <param name="count">Total number of this item that will be in the item pool for randomization.</param>
-    /// <param name="giveItems">A dictionary of values this item has. Used for <see cref="Logic.Builtin.ItemValue"/>.</param>
+    /// <param name="giveItems">
+    /// A dictionary of values this item has. Used for <see cref="Logic.Builtin.ItemValue"/>.
+    /// </param>
     /// <param name="early">
     /// How many copies of this item are required to be placed somewhere accessible from the start.
     /// </param>

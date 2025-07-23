@@ -6,7 +6,9 @@ namespace Emik.Manual.Domains;
 /// <param name="Priority">The importance and placement bias of the item.</param>
 /// <param name="Categories">A list of categories to be applied to this item.</param>
 /// <param name="Count">Total number of this item that will be in the item pool for randomization.</param>
-/// <param name="GiveItems">A dictionary of values this item has. Used for <see cref="Builtin.ItemValue"/>.</param>
+/// <param name="GiveItems">
+/// A dictionary of values this item has. Used for <see cref="Logic.Builtin.ItemValue"/>.
+/// </param>
 /// <param name="Early">
 /// How many copies of this item are required to be placed somewhere accessible from the start.
 /// </param>
