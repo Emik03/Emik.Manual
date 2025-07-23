@@ -97,6 +97,13 @@ public sealed partial class Logic : IAddTo,
     internal Logic(Chars chars, int count, Kind kind) => (Name, Count, Type) = (chars, count, kind);
 
     /// <summary>Initializes a new instance of the <see cref="Logic"/> class.</summary>
+    /// <param name="opt">The option.</param>
+    internal Logic(Logic? opt) =>
+        (Left, Type) = (opt, opt?.Type is Kind.Item or Kind.ItemCount or Kind.Category or Kind.CategoryCount
+            ? Kind.OptOne
+            : Kind.OptAll);
+
+    /// <summary>Initializes a new instance of the <see cref="Logic"/> class.</summary>
     /// <param name="chars">The chars.</param>
     /// <param name="kind">The kind.</param>
     Logic(Chars chars, Kind kind) => (Name, Type) = (chars, kind);
@@ -124,10 +131,6 @@ public sealed partial class Logic : IAddTo,
         AppendArgs(builder.Append(name.Span).Append('('), args);
         Name = builder.Append(')').ToString();
     }
-
-    /// <summary>Initializes a new instance of the <see cref="Logic"/> class.</summary>
-    /// <param name="optAll">The option.</param>
-    Logic(Logic? optAll) => (Left, Type) = (optAll, Kind.OptAll);
 
     /// <summary>Initializes a new instance of the <see cref="Logic"/> class.</summary>
     /// <param name="left">The left-hand side.</param>
@@ -188,7 +191,7 @@ public sealed partial class Logic : IAddTo,
             Kind.And or Kind.Or => Left?.YamlSettings is { } left
                 ? Right?.YamlSettings is { } leftRight ? left.Concat(leftRight) : left
                 : Right?.YamlSettings,
-            Kind.OptAll => Left?.YamlSettings,
+            Kind.OptOne or Kind.OptAll => Left?.YamlSettings,
             Kind.YamlEnabled or
                 Kind.YamlDisabled or
                 Kind.YamlEqual or
@@ -199,6 +202,11 @@ public sealed partial class Logic : IAddTo,
                 Kind.YamlLessThanOrEqual => [(Builtin.YamlCompare, new(Name))],
             _ => null,
         };
+
+    /// <summary>Gets the percent.</summary>
+    /// <returns>The percent.</returns>
+    [Pure]
+    string Percentage => Count switch { 50 => "HALF", 100 => "ALL", _ => $"{Count}%" };
 
     /// <inheritdoc cref="IArchipelago{T}.op_Implicit(string)"/>
     [Pure]
@@ -496,21 +504,6 @@ public sealed partial class Logic : IAddTo,
     public static Logic? ItemValue(Chars phantomItem, int count) =>
         count > 0 ? new(phantomItem, count, Kind.ItemValue) : null;
 
-    /// <summary>Creates the <see cref="Logic"/> object of <see cref="Builtin.OptAll"/>.</summary>
-    /// <param name="logic">The logic to wrap.</param>
-    /// <returns>The new <see cref="Logic"/> object containing the parameter <paramref name="logic"/>.</returns>
-    /// <seealso cref="Builtin.OptAll"/>
-    [Pure]
-    [return: NotNullIfNotNull(nameof(logic))]
-    public static Logic? OptAll(Logic? logic) => logic is null ? null : new(logic);
-
-    /// <summary>Creates the <see cref="Logic"/> object of <see cref="Builtin.OptOne"/>.</summary>
-    /// <param name="item">The item.</param>
-    /// <returns>The new <see cref="Logic"/> object containing the parameter <paramref name="item"/>.</returns>
-    /// <seealso cref="Builtin.OptOne"/>
-    [Pure]
-    public static Logic OptOne(in Item item) => new(item.Name, Kind.ItemValue);
-
     /// <summary>Creates the <see cref="Logic"/> object of <see cref="Builtin.Custom"/>.</summary>
     /// <param name="name">The name of the function.</param>
     /// <param name="args">The args of the function.</param>
@@ -593,7 +586,7 @@ public sealed partial class Logic : IAddTo,
                     Throw(locationCategory);
 
                 break;
-            case Kind.OptAll:
+            case Kind.OptOne or Kind.OptAll:
                 Left?.ThrowIfUnset(categories, items, locations);
                 break;
         }
@@ -657,7 +650,7 @@ public sealed partial class Logic : IAddTo,
             Kind.Or => Left?.ExpandLocations(locations, regions) is { } l &&
                 (Right?.ExpandLocations(locations, regions) ?? Right) is var ir ? l | ir :
                 Right?.ExpandLocations(locations, regions) is { } r ? Left | r : null,
-            Kind.OptAll when Left?.ExpandLocations(locations, regions) is { } opt => new(opt),
+            Kind.OptOne or Kind.OptAll when Left?.ExpandLocations(locations, regions) is { } opt => new(opt),
             Kind.Region when !IsUnset(regions, out var r) => r.ExpandedLogic(regions.Values),
             Kind.Location when !IsUnset(locations, out var l) => l.Logic & l.Region.ExpandedLogic(regions.Values),
             _ => null,
@@ -697,14 +690,14 @@ public sealed partial class Logic : IAddTo,
                 : $"{Left?.ToString(false)} AND {Right?.ToString(false)}",
             Kind.Item => $"|{Name}|",
             Kind.ItemCount => $"|{Name}:{Count}|",
-            Kind.ItemPercent => $"|{Name}:{Percent()}|",
+            Kind.ItemPercent => $"|{Name}:{Percentage}|",
             Kind.Category => $"|@{Name}|",
             Kind.CategoryCount => $"|@{Name}:{Count}|",
-            Kind.CategoryPercent => $"|@{Name}:{Percent()}|",
+            Kind.CategoryPercent => $"|@{Name}:{Percentage}|",
             Kind.Region => $"{{canReachRegion({Name})}}",
             Kind.Location => $"{{canReachLocation({Name})}}",
             Kind.ItemValue => $"{{{nameof(Builtin.ItemValue)}({Name}:{Count})}}",
-            Kind.OptOne => $"{{{nameof(Builtin.OptOne)}({Name})}}",
+            Kind.OptOne => $"{{{nameof(Builtin.OptOne)}({Left})}}",
             Kind.OptAll => $"{{{nameof(Builtin.OptAll)}({Left})}}",
             Kind.YamlEnabled => $"{{{nameof(Builtin.YamlEnabled)}({Name})}}",
             Kind.YamlDisabled => $"{{{nameof(Builtin.YamlDisabled)}({Name})}}",
@@ -716,9 +709,4 @@ public sealed partial class Logic : IAddTo,
             Kind.YamlLessThanOrEqual => $"{{{nameof(Builtin.YamlCompare)}({Name} <= {Count})}}",
             _ => $"{{{Name}}}",
         };
-
-    /// <summary>Gets the percent.</summary>
-    /// <returns>The percent.</returns>
-    [Pure]
-    string Percent() => Count switch { 50 => "HALF", 100 => "ALL", _ => $"{Count}%" };
 }

@@ -272,8 +272,8 @@ public readonly partial record struct Game(
                 FsAsync(Path.Join(directory, "categories.json"), Json(World.AllCategories, locations, regions), token),
                 FsAsync(Path.Join(directory, "locations.json"), Json(World.AllLocations, locations, regions), token),
                 FsAsync(Path.Join(directory, "regions.json"), Json(World.AllRegions, locations, regions), token),
-                FsAsync(Path.Join(directory, "options.json"), World.OptionsString(), token),
                 FsAsync(Path.Join(directory, "items.json"), Json(World.AllItems, locations, regions), token),
+                FsAsync(Path.Join(directory, "options.json"), World.OptionsString(), token),
                 game
             );
     }
@@ -291,6 +291,8 @@ public readonly partial record struct Game(
     /// Whether to replace all uses of <see cref="Logic.Builtin.CanReachLocation"/> by expanding it into the equivalent
     /// logic, since use of <see cref="Logic.Builtin.CanReachLocation"/> can dramatically increase generation time.
     /// Expansion will make this method take longer, and can make the resulting logic strings difficult to read.
+    /// Having this set to <see langword="false"/> will make any use of <see cref="Logic.Kind.Region"/> use a
+    /// non-standard function <c>canReachRegion</c>, which must be implemented in Python.
     /// </param>
     /// <param name="token">The cancellation token.</param>
     /// <exception cref="ArgumentException">The zip file could not be opened.</exception>
@@ -349,8 +351,8 @@ public readonly partial record struct Game(
                 CopyToAsync(writer, "data/categories.json", Json(World.AllCategories, locations, regions), token),
                 CopyToAsync(writer, "data/locations.json", Json(World.AllLocations, locations, regions), token),
                 CopyToAsync(writer, "data/regions.json", Json(World.AllRegions, locations, regions), token),
-                CopyToAsync(writer, "data/options.json", World.OptionsString(), token),
                 CopyToAsync(writer, "data/items.json", Json(World.AllItems, locations, regions), token),
+                CopyToAsync(writer, "data/options.json", World.OptionsString(), token),
                 game
             ));
     }

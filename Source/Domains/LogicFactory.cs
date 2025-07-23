@@ -67,6 +67,18 @@ public static partial class LogicFactory
     /// <returns>The created <see cref="Logic"/>.</returns>
     public static Logic? And(this IEnumerable<Logic?> logic) => logic.Aggregate((Logic?)null, (a, n) => a & n);
 
+    /// <summary>
+    /// Creates the <see cref="Logic"/> object of <see cref="Logic.Builtin.OptOne"/> or
+    /// <see cref="Logic.Builtin.OptAll"/>, depending on the <see cref="Logic"/> parameter.
+    /// </summary>
+    /// <param name="logic">The logic to wrap.</param>
+    /// <returns>The new <see cref="Logic"/> object containing the parameter <paramref name="logic"/>.</returns>
+    /// <seealso cref="Logic.Builtin.OptOne"/>
+    /// <seealso cref="Logic.Builtin.OptAll"/>
+    [Pure]
+    [return: NotNullIfNotNull(nameof(logic))]
+    public static Logic? Opt(this Logic? logic) => logic is null ? null : new(logic);
+
     /// <summary>Creates the <see cref="Logic"/> that requires any of the provided categories.</summary>
     /// <param name="categories">The categories to wrap in <see cref="Logic"/>.</param>
     /// <returns>The created <see cref="Logic"/>.</returns>
