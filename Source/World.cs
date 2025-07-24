@@ -6,7 +6,7 @@ namespace Emik.Manual;
 /// Create a new instance of <see cref="World"/> and start appending with
 /// <see cref="Category(Chars, ImmutableArray{Yaml})"/>, <see cref="Item"/>,
 /// <see cref="Location"/>, and
-/// <see cref="Region(Chars, Logic, ArchipelagoArrayBuilder{T}, bool, ArchipelagoArrayBuilder{T})"/>,
+/// <see cref="Region(Chars, Logic, ArchipelagoArrayBuilder{Passage}, bool, ArchipelagoArrayBuilder{Passage})"/>,
 /// then use the returned value from
 /// <see cref="Game(Chars, Chars, Chars, bool, int, ImmutableArray{StartingItemBlock})"/> to call
 /// <see cref="Domains.Game.WriteAsync"/>, or <see cref="Domains.Game.ZipAsync"/>.
@@ -46,7 +46,7 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
 
     /// <summary>
     /// Gets the regions that have been created so far with
-    /// <see cref="Region(Chars, Logic, ArchipelagoArrayBuilder{T}, bool, ArchipelagoArrayBuilder{T})"/>.
+    /// <see cref="Region(Chars, Logic, ArchipelagoArrayBuilder{Passage}, bool, ArchipelagoArrayBuilder{Passage})"/>.
     /// </summary>
     [Pure]
     public ValueDictionary<Region> AllRegions => new(Regions);
@@ -405,24 +405,24 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
         return ref location;
     }
 
-    /// <inheritdoc cref="Region(Chars, Logic, ArchipelagoArrayBuilder{T}, bool, ArchipelagoArrayBuilder{T})"/>
+    /// <inheritdoc cref="Region(Chars, Logic, ArchipelagoArrayBuilder{Passage}, bool, ArchipelagoArrayBuilder{Passage})"/>
     public ref readonly Region Region(Chars name) => ref Region(name, null, default(ArchipelagoArrayBuilder<Region>));
 
-    /// <inheritdoc cref="Region(Chars, Logic, ArchipelagoArrayBuilder{T}, bool, ArchipelagoArrayBuilder{T})"/>
+    /// <inheritdoc cref="Region(Chars, Logic, ArchipelagoArrayBuilder{Passage}, bool, ArchipelagoArrayBuilder{Passage})"/>
     public ref readonly Region Region(Chars name, Logic? logic) =>
         ref Region(name, logic, default(ArchipelagoArrayBuilder<Region>));
 
-    /// <inheritdoc cref="Region(Chars, Logic, ArchipelagoArrayBuilder{T}, bool, ArchipelagoArrayBuilder{T})"/>
+    /// <inheritdoc cref="Region(Chars, Logic, ArchipelagoArrayBuilder{Passage}, bool, ArchipelagoArrayBuilder{Passage})"/>
     // ReSharper disable MethodOverloadWithOptionalParameter
     public ref readonly Region Region(Chars name, Logic? logic, bool isStarting) =>
         ref Region(name, logic, default(ArchipelagoArrayBuilder<Region>), isStarting);
 
-    /// <inheritdoc cref="Region(Chars, Logic, ArchipelagoArrayBuilder{T}, bool, ArchipelagoArrayBuilder{T})"/>
+    /// <inheritdoc cref="Region(Chars, Logic, ArchipelagoArrayBuilder{Passage}, bool, ArchipelagoArrayBuilder{Passage})"/>
     // ReSharper disable MethodOverloadWithOptionalParameter
     public ref readonly Region Region(Chars name, bool isStarting) =>
         ref Region(name, null, default(ArchipelagoArrayBuilder<Region>), isStarting);
 
-    /// <inheritdoc cref="Region(Chars, Logic, ArchipelagoArrayBuilder{T}, bool, ArchipelagoArrayBuilder{T})"/>
+    /// <inheritdoc cref="Region(Chars, Logic, ArchipelagoArrayBuilder{Passage}, bool, ArchipelagoArrayBuilder{Passage})"/>
     // ReSharper disable MethodOverloadWithOptionalParameter
     public ref readonly Region Region(
         Chars name,
@@ -474,7 +474,7 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
         return ref region;
     }
 
-    /// <inheritdoc cref="Region(Chars, Logic, ArchipelagoArrayBuilder{T}, bool, ArchipelagoArrayBuilder{T})"/>
+    /// <inheritdoc cref="Region(Chars, Logic, ArchipelagoArrayBuilder{Passage}, bool, ArchipelagoArrayBuilder{Passage})"/>
     public ref readonly Region Region(
         Chars name,
         Logic? logic = null,
