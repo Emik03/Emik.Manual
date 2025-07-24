@@ -386,7 +386,7 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
         denyList.Sync(_items, fallback, strict);
         allowList.Sync(_items, fallback, strict);
         categories.Sync(_categories, fallback, strict);
-        logic?.ThrowIfUnset(_categories, _items, Locations, strict);
+        logic?.ThrowIfUnset(_categories, _items, Locations, Regions, strict);
 
         location = new(
             name,
@@ -467,7 +467,7 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
         if (exists)
             return ref region;
 
-        logic?.ThrowIfUnset(_categories, _items, Locations, strict);
+        logic?.ThrowIfUnset(_categories, _items, Locations, Regions, strict);
         connectsTo.Sync(Regions, fallback, strict);
         entrances.Sync(_categories, _items, Locations, Regions, fallback, strict);
         region = new(name, logic, connectsTo.ToImmutable(), isStarting, entrances.ToImmutable(), []);
@@ -488,7 +488,7 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
         if (exists)
             return ref region;
 
-        logic?.ThrowIfUnset(_categories, _items, Locations, strict);
+        logic?.ThrowIfUnset(_categories, _items, Locations, Regions, strict);
         connectsTo.Sync(_categories, _items, Locations, Regions, fallback, strict);
         entrances.Sync(_categories, _items, Locations, Regions, fallback, strict);
         var exits = connectsTo.ToImmutable();

@@ -35,7 +35,7 @@ public static partial class LogicFactory
         {
             var (region, logic) = builder[i];
             ArchipelagoBuilder<Region>.Sync(regions, ref region, fallback, strict);
-            logic?.ThrowIfUnset(categories, items, locations, strict);
+            logic?.ThrowIfUnset(categories, items, locations, regions, strict);
         }
     }
 

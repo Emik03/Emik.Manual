@@ -524,14 +524,17 @@ public sealed partial class Logic : IAddTo,
     /// <param name="categories">The referenced categories.</param>
     /// <param name="items">The referenced items.</param>
     /// <param name="locations">The referenced locations.</param>
+    /// <param name="regions">The referenced regions.</param>
     /// <param name="strict">Whether to perform the check.</param>
     /// <exception cref="KeyNotFoundException">
-    /// This logic instance contains an unreferenced category or item.
+    /// This <see cref="Logic"/> instance contains an unreferenced <see cref="Category"/>,
+    /// <see cref="Item"/>, <see cref="Location"/>, or <see cref="Region"/>.
     /// </exception>
     public void ThrowIfUnset(
         Dictionary<string, Category> categories,
         Dictionary<string, Item> items,
         Dictionary<string, Location> locations,
+        Dictionary<string, Region> regions,
         bool strict = true
     )
     {
@@ -541,19 +544,16 @@ public sealed partial class Logic : IAddTo,
             throw new KeyNotFoundException($"\"{t.Name}\" is referenced before it is defined in {typeof(T).Name}!");
 
         [Pure]
-        static Category? FindFirstUnreferenced(ImmutableArray<Category> array, Dictionary<string, Category> categories)
+        static Category? FindFirstUnreferenced(ImmutableArray<Category> array, Dictionary<string, Category> dict)
         {
             if (array.IsDefaultOrEmpty)
                 return null;
 
-            foreach (var category in array.AsSpan())
+            foreach (var c in array.AsSpan())
                 if (Unsafe.IsNullRef(
-                    CollectionsMarshal.GetValueRefOrNullRef(
-                        categories.GetAlternateLookup<ReadOnlySpan<char>>(),
-                        category.Name.Span
-                    )
+                    CollectionsMarshal.GetValueRefOrNullRef(dict.GetAlternateLookup<ReadOnlySpan<char>>(), c.Name.Span)
                 ))
-                    return category;
+                    return c;
 
             return null;
         }
@@ -562,8 +562,8 @@ public sealed partial class Logic : IAddTo,
         {
             case var _ when !strict: break;
             case Kind.And or Kind.Or:
-                Left?.ThrowIfUnset(categories, items, locations);
-                Right?.ThrowIfUnset(categories, items, locations);
+                Left?.ThrowIfUnset(categories, items, locations, regions);
+                Right?.ThrowIfUnset(categories, items, locations, regions);
                 break;
             case Kind.Item or Kind.ItemCount or Kind.ItemPercent:
                 if (IsUnset(items, out var item))
@@ -578,6 +578,11 @@ public sealed partial class Logic : IAddTo,
                     Throw(category);
 
                 break;
+            case Kind.Region:
+                if (IsUnset(regions, out var region))
+                    Throw(region);
+
+                break;
             case Kind.Location:
                 if (IsUnset(locations, out var location))
                     Throw(location);
@@ -587,7 +592,7 @@ public sealed partial class Logic : IAddTo,
 
                 break;
             case Kind.OptOne or Kind.OptAll:
-                Left?.ThrowIfUnset(categories, items, locations);
+                Left?.ThrowIfUnset(categories, items, locations, regions);
                 break;
         }
     }
