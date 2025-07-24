@@ -58,27 +58,27 @@ public readonly partial record struct Location(
 
     /// <inheritdoc cref="Logic.op_BitwiseAnd"/>
     [Pure]
-    public static Logic operator &(Location left, Location right) => new Logic(left) & new Logic(right);
+    public static Logic operator &(in Location left, in Location right) => new Logic(left) & new Logic(right);
 
     /// <inheritdoc cref="Logic.op_BitwiseAnd"/>
     [Pure]
-    public static Logic operator &(Location left, Logic? right) => new Logic(left) & right;
+    public static Logic operator &(in Location left, Logic? right) => new Logic(left) & right;
 
     /// <inheritdoc cref="Logic.op_BitwiseAnd"/>
     [Pure]
-    public static Logic operator &(Logic? left, Location right) => left & new Logic(right);
+    public static Logic operator &(Logic? left, in Location right) => left & new Logic(right);
 
     /// <inheritdoc cref="Logic.op_BitwiseOr"/>
     [Pure]
-    public static Logic operator |(Location left, Location right) => new Logic(left) | new Logic(right);
+    public static Logic operator |(in Location left, in Location right) => new Logic(left) | new Logic(right);
 
     /// <inheritdoc cref="Logic.op_BitwiseOr"/>
     [Pure]
-    public static Logic operator |(Location left, Logic? right) => new Logic(left) | right;
+    public static Logic operator |(in Location left, Logic? right) => new Logic(left) | right;
 
     /// <inheritdoc cref="Logic.op_BitwiseOr"/>
     [Pure]
-    public static Logic operator |(Logic? left, Location right) => left | new Logic(right);
+    public static Logic operator |(Logic? left, in Location right) => left | new Logic(right);
 
     /// <inheritdoc />
     // ReSharper disable once CognitiveComplexity

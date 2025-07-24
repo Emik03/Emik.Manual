@@ -56,7 +56,7 @@ public static partial class LogicFactory
     /// <returns>The created <see cref="Logic"/>.</returns>
     public static Logic? And(this IEnumerable<Item> items) => items.Aggregate((Logic?)null, (a, n) => a & n);
 
-    /// <summary>Creates the <see cref="Logic"/> that requires all of the provided locations.</summary>
+    /// <summary>Creates the <see cref="Logic"/> that requires all of the provided locations to be accessible.</summary>
     /// <param name="locations">The locations to wrap in <see cref="Logic"/>.</param>
     /// <returns>The created <see cref="Logic"/>.</returns>
     public static Logic? And(this IEnumerable<Location> locations) =>
@@ -66,6 +66,11 @@ public static partial class LogicFactory
     /// <param name="logic">The items to wrap in <see cref="Logic"/>.</param>
     /// <returns>The created <see cref="Logic"/>.</returns>
     public static Logic? And(this IEnumerable<Logic?> logic) => logic.Aggregate((Logic?)null, (a, n) => a & n);
+
+    /// <summary>Creates the <see cref="Logic"/> that requires all of the provided regions to be accessible.</summary>
+    /// <param name="regions">The items to wrap in <see cref="Logic"/>.</param>
+    /// <returns>The created <see cref="Logic"/>.</returns>
+    public static Logic? And(this IEnumerable<Region?> regions) => regions.Aggregate((Logic?)null, (a, n) => a & n);
 
     /// <summary>
     /// Creates the <see cref="Logic"/> object of <see cref="Logic.Builtin.OptOne"/> or
@@ -90,7 +95,7 @@ public static partial class LogicFactory
     /// <returns>The created <see cref="Logic"/>.</returns>
     public static Logic? Or(this IEnumerable<Item> items) => items.Aggregate((Logic?)null, (a, n) => a | n);
 
-    /// <summary>Creates the <see cref="Logic"/> that requires any of the provided locations.</summary>
+    /// <summary>Creates the <see cref="Logic"/> that requires any of the provided locations to be accessible.</summary>
     /// <param name="locations">The locations to wrap in <see cref="Logic"/>.</param>
     /// <returns>The created <see cref="Logic"/>.</returns>
     public static Logic? Or(this IEnumerable<Location> locations) => locations.Aggregate((Logic?)null, (a, n) => a | n);
@@ -99,6 +104,11 @@ public static partial class LogicFactory
     /// <param name="logic">The items to wrap in <see cref="Logic"/>.</param>
     /// <returns>The created <see cref="Logic"/>.</returns>
     public static Logic? Or(this IEnumerable<Logic?> logic) => logic.Aggregate((Logic?)null, (a, n) => a | n);
+
+    /// <summary>Creates the <see cref="Logic"/> that requires any of the provided regions to be accessible.</summary>
+    /// <param name="regions">The regions to wrap in <see cref="Logic"/>.</param>
+    /// <returns>The created <see cref="Logic"/>.</returns>
+    public static Logic? Or(this IEnumerable<Region> regions) => regions.Aggregate((Logic?)null, (a, n) => a | n);
 
     /// <summary>Returns itself, discarding the parameter. Prints both if compiled with a specific constant.</summary>
     /// <param name="left">The logic to return.</param>

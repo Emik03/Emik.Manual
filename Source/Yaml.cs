@@ -23,7 +23,9 @@ public readonly partial record struct Yaml([Match(Yaml.DisallowedChars, true)] C
     public Logic this[bool enabled] => enabled ? Logic.Enabled(this) : Logic.Disabled(this);
 
     /// <summary>Creates the <see cref="Logic"/> that requires this value be greater than the value provided.</summary>
-    /// <param name="count">The threshold. If <see cref="Index.IsFromEnd"/>, asks if less than or equal instead.</param>
+    /// <param name="count">
+    /// The threshold. If <see cref="System.Index.IsFromEnd"/>, asks if less than or equal instead.
+    /// </param>
     [Pure]
     public Logic this[Index count] => count.IsFromEnd ? this <= count.Value : this >= count.Value;
 

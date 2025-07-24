@@ -87,6 +87,10 @@ public sealed partial class Logic : IAddTo,
         (Name, Count, Type) = (category.Name, count, Kind.CategoryCount);
 
     /// <summary>Initializes a new instance of the <see cref="Logic"/> class.</summary>
+    /// <param name="region">The region.</param>
+    public Logic(in Region region) => (Name, Type) = (region.Name, Kind.Region);
+
+    /// <summary>Initializes a new instance of the <see cref="Logic"/> class.</summary>
     /// <param name="location">The location.</param>
     public Logic(in Location location) => (Name, Type) = (location.Name, Kind.Location);
 
@@ -293,6 +297,12 @@ public sealed partial class Logic : IAddTo,
     /// <returns>The new <see cref="Logic"/> instance.</returns>
     [Pure]
     public static implicit operator Logic((int Count, Category Category) count) => new(count.Category, count.Count);
+
+    /// <summary>Implicitly invokes <see cref="Manual.Logic(in Region)"/>.</summary>
+    /// <param name="region">The region.</param>
+    /// <returns>The new <see cref="Logic"/> instance.</returns>
+    [Pure]
+    public static implicit operator Logic(in Region region) => new(region);
 
     /// <summary>Implicitly invokes <see cref="Manual.Logic(in Location)"/>.</summary>
     /// <param name="location">The location.</param>

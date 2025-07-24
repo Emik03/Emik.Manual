@@ -40,6 +40,30 @@ public readonly partial record struct Region(
     [Pure]
     public static implicit operator Region(ReadOnlyMemory<char> name) => new(name);
 
+    /// <inheritdoc cref="Logic.op_BitwiseAnd"/>
+    [Pure]
+    public static Logic operator &(in Region left, in Region right) => new Logic(left) & new Logic(right);
+
+    /// <inheritdoc cref="Logic.op_BitwiseAnd"/>
+    [Pure]
+    public static Logic operator &(in Region left, Logic? right) => new Logic(left) & right;
+
+    /// <inheritdoc cref="Logic.op_BitwiseAnd"/>
+    [Pure]
+    public static Logic operator &(Logic? left, in Region right) => left & new Logic(right);
+
+    /// <inheritdoc cref="Logic.op_BitwiseOr"/>
+    [Pure]
+    public static Logic operator |(in Region left, in Region right) => new Logic(left) | new Logic(right);
+
+    /// <inheritdoc cref="Logic.op_BitwiseOr"/>
+    [Pure]
+    public static Logic operator |(in Region left, Logic? right) => new Logic(left) | right;
+
+    /// <inheritdoc cref="Logic.op_BitwiseOr"/>
+    [Pure]
+    public static Logic operator |(Logic? left, in Region right) => left | new Logic(right);
+
     /// <inheritdoc />
     void IAddTo.CopyTo(
         [NotNullIfNotNull(nameof(value))] ref JsonNode? value,

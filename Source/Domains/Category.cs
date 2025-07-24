@@ -53,27 +53,27 @@ public readonly partial record struct Category(Chars Name, bool IsHidden = false
 
     /// <inheritdoc cref="Logic.op_BitwiseAnd"/>
     [Pure]
-    public static Logic operator &(Category left, Category right) => new Logic(left) & new Logic(right);
+    public static Logic operator &(in Category left, in Category right) => new Logic(left) & new Logic(right);
 
     /// <inheritdoc cref="Logic.op_BitwiseAnd"/>
     [Pure]
-    public static Logic operator &(Category left, Logic? right) => new Logic(left) & right;
+    public static Logic operator &(in Category left, Logic? right) => new Logic(left) & right;
 
     /// <inheritdoc cref="Logic.op_BitwiseAnd"/>
     [Pure]
-    public static Logic operator &(Logic? left, Category right) => left & new Logic(right);
+    public static Logic operator &(Logic? left, in Category right) => left & new Logic(right);
 
     /// <inheritdoc cref="Logic.op_BitwiseOr"/>
     [Pure]
-    public static Logic operator |(Category left, Category right) => new Logic(left) | new Logic(right);
+    public static Logic operator |(in Category left, in Category right) => new Logic(left) | new Logic(right);
 
     /// <inheritdoc cref="Logic.op_BitwiseOr"/>
     [Pure]
-    public static Logic operator |(Category left, Logic? right) => new Logic(left) | right;
+    public static Logic operator |(in Category left, Logic? right) => new Logic(left) | right;
 
     /// <inheritdoc cref="Logic.op_BitwiseOr"/>
     [Pure]
-    public static Logic operator |(Logic? left, Category right) => left | new Logic(right);
+    public static Logic operator |(Logic? left, in Category right) => left | new Logic(right);
 
     /// <inheritdoc />
     void IAddTo.CopyTo(
