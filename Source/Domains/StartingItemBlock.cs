@@ -17,9 +17,9 @@ namespace Emik.Manual.Domains;
 /// <seealso href="https://github.com/ManualForArchipelago/Manual/blob/main/docs/making/game.md#starting-inventory"/>
 [StructLayout(LayoutKind.Auto)]
 public readonly partial record struct StartingItemBlock(
-    CategoryAndItemBuilder Set = default,
+    CategoryAndItemArrayBuilder Set = default,
     int? Amount = null,
-    ArchipelagoBuilder<Item> DependsOn = default,
+    ArchipelagoArrayBuilder<Item> DependsOn = default,
     ImmutableArray<Yaml> Yaml = default
 ) : IAddTo
 {

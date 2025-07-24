@@ -6,7 +6,7 @@ namespace Emik.Manual;
 /// Create a new instance of <see cref="World"/> and start appending with
 /// <see cref="Category(Chars, ImmutableArray{Yaml})"/>, <see cref="Item"/>,
 /// <see cref="Location"/>, and
-/// <see cref="Region(Chars, Logic, ArchipelagoBuilder{Domains.Region}, bool, ArchipelagoBuilder{Passage})"/>,
+/// <see cref="Region(Chars, Logic, ArchipelagoArrayBuilder{T}, bool, ArchipelagoArrayBuilder{T})"/>,
 /// then use the returned value from
 /// <see cref="Game(Chars, Chars, Chars, bool, int, ImmutableArray{StartingItemBlock})"/> to call
 /// <see cref="Domains.Game.WriteAsync"/>, or <see cref="Domains.Game.ZipAsync"/>.
@@ -46,7 +46,7 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
 
     /// <summary>
     /// Gets the regions that have been created so far with
-    /// <see cref="Region(Chars, Logic, ArchipelagoBuilder{Domains.Region}, bool, ArchipelagoBuilder{Domains.Passage})"/>.
+    /// <see cref="Region(Chars, Logic, ArchipelagoArrayBuilder{T}, bool, ArchipelagoArrayBuilder{T})"/>.
     /// </summary>
     [Pure]
     public ValueDictionary<Region> AllRegions => new(Regions);
@@ -204,7 +204,7 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
     [LinqTunnel, Pure]
     public IEnumerable<Item> AllItemsWith(Category category)
     {
-        ArchipelagoBuilder<Category>.Sync(_categories, ref category, fallback, strict);
+        ArchipelagoArrayBuilder<Category>.Sync(_categories, ref category, fallback, strict);
         return _items.Values.Where(x => x.Categories.Any(Match(category)));
     }
 
@@ -217,7 +217,7 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
     /// match any value in the parameter <paramref name="categories"/>.
     /// </returns>
     [LinqTunnel, Pure]
-    public IEnumerable<Item> AllItemsWithAny(params ArchipelagoBuilder<Category> categories)
+    public IEnumerable<Item> AllItemsWithAny(params ArchipelagoArrayBuilder<Category> categories)
     {
         categories.Sync(_categories, fallback, strict);
         return _items.Values.Where(x => x.Categories.Any(Match(categories)));
@@ -232,7 +232,7 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
     /// match all values in the parameter <paramref name="categories"/>.
     /// </returns>
     [LinqTunnel, Pure]
-    public IEnumerable<Item> AllItemsWithAll(params ArchipelagoBuilder<Category> categories)
+    public IEnumerable<Item> AllItemsWithAll(params ArchipelagoArrayBuilder<Category> categories)
     {
         categories.Sync(_categories, fallback, strict);
         return _items.Values.Where(x => x.Categories.All(Match(categories)));
@@ -249,7 +249,7 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
     [LinqTunnel, Pure]
     public IEnumerable<Location> AllLocationsWith(Category category)
     {
-        ArchipelagoBuilder<Category>.Sync(_categories, ref category, fallback, strict);
+        ArchipelagoArrayBuilder<Category>.Sync(_categories, ref category, fallback, strict);
         return Locations.Values.Where(x => x.Categories.Any(Match(category)));
     }
 
@@ -262,7 +262,7 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
     /// match any value in the parameter <paramref name="categories"/>.
     /// </returns>
     [LinqTunnel, Pure]
-    public IEnumerable<Location> AllLocationsWithAny(params ArchipelagoBuilder<Category> categories)
+    public IEnumerable<Location> AllLocationsWithAny(params ArchipelagoArrayBuilder<Category> categories)
     {
         categories.Sync(_categories, fallback, strict);
         return Locations.Values.Where(x => x.Categories.Any(Match(categories)));
@@ -277,7 +277,7 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
     /// match all values in the parameter <paramref name="categories"/>.
     /// </returns>
     [LinqTunnel, Pure]
-    public IEnumerable<Location> AllLocationsWithAll(params ArchipelagoBuilder<Category> categories)
+    public IEnumerable<Location> AllLocationsWithAll(params ArchipelagoArrayBuilder<Category> categories)
     {
         categories.Sync(_categories, fallback, strict);
         return Locations.Values.Where(x => x.Categories.All(Match(categories)));
@@ -306,7 +306,7 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
     public ref readonly Item Item(
         [Match(AllowedItemChars, true)] Chars name,
         Priority? priority = null,
-        [InstantHandle] ArchipelagoBuilder<Category> categories = default,
+        [InstantHandle] ArchipelagoArrayBuilder<Category> categories = default,
         int count = 1,
         ImmutableArray<(Chars PhantomItemName, int Amount)> giveItems = default,
         int early = 0,
@@ -369,11 +369,11 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
     public ref readonly Location Location(
         Chars name,
         Logic? logic = null,
-        [InstantHandle] ArchipelagoBuilder<Category> categories = default,
+        [InstantHandle] ArchipelagoArrayBuilder<Category> categories = default,
         scoped in Region region = default,
         LocationOptions options = LocationOptions.None,
-        [InstantHandle] CategoryAndItemBuilder allowList = default,
-        [InstantHandle] CategoryAndItemBuilder denyList = default,
+        [InstantHandle] CategoryAndItemArrayBuilder allowList = default,
+        [InstantHandle] CategoryAndItemArrayBuilder denyList = default,
         Chars hintEntrance = default,
         int? id = null
     )
@@ -405,32 +405,32 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
         return ref location;
     }
 
-    /// <inheritdoc cref="Region(Chars, Logic, ArchipelagoBuilder{Domains.Region}, bool, ArchipelagoBuilder{Passage})"/>
-    public ref readonly Region Region(Chars name) => ref Region(name, null, default(ArchipelagoBuilder<Region>));
+    /// <inheritdoc cref="Region(Chars, Logic, ArchipelagoArrayBuilder{T}, bool, ArchipelagoArrayBuilder{T})"/>
+    public ref readonly Region Region(Chars name) => ref Region(name, null, default(ArchipelagoArrayBuilder<Region>));
 
-    /// <inheritdoc cref="Region(Chars, Logic, ArchipelagoBuilder{Domains.Region}, bool, ArchipelagoBuilder{Passage})"/>
+    /// <inheritdoc cref="Region(Chars, Logic, ArchipelagoArrayBuilder{T}, bool, ArchipelagoArrayBuilder{T})"/>
     public ref readonly Region Region(Chars name, Logic? logic) =>
-        ref Region(name, logic, default(ArchipelagoBuilder<Region>));
+        ref Region(name, logic, default(ArchipelagoArrayBuilder<Region>));
 
-    /// <inheritdoc cref="Region(Chars, Logic, ArchipelagoBuilder{Domains.Region}, bool, ArchipelagoBuilder{Passage})"/>
+    /// <inheritdoc cref="Region(Chars, Logic, ArchipelagoArrayBuilder{T}, bool, ArchipelagoArrayBuilder{T})"/>
     // ReSharper disable MethodOverloadWithOptionalParameter
     public ref readonly Region Region(Chars name, Logic? logic, bool isStarting) =>
-        ref Region(name, logic, default(ArchipelagoBuilder<Region>), isStarting);
+        ref Region(name, logic, default(ArchipelagoArrayBuilder<Region>), isStarting);
 
-    /// <inheritdoc cref="Region(Chars, Logic, ArchipelagoBuilder{Domains.Region}, bool, ArchipelagoBuilder{Passage})"/>
+    /// <inheritdoc cref="Region(Chars, Logic, ArchipelagoArrayBuilder{T}, bool, ArchipelagoArrayBuilder{T})"/>
     // ReSharper disable MethodOverloadWithOptionalParameter
     public ref readonly Region Region(Chars name, bool isStarting) =>
-        ref Region(name, null, default(ArchipelagoBuilder<Region>), isStarting);
+        ref Region(name, null, default(ArchipelagoArrayBuilder<Region>), isStarting);
 
-    /// <inheritdoc cref="Region(Chars, Logic, ArchipelagoBuilder{Domains.Region}, bool, ArchipelagoBuilder{Passage})"/>
+    /// <inheritdoc cref="Region(Chars, Logic, ArchipelagoArrayBuilder{T}, bool, ArchipelagoArrayBuilder{T})"/>
     // ReSharper disable MethodOverloadWithOptionalParameter
     public ref readonly Region Region(
         Chars name,
         Logic? logic = null,
         bool isStarting = false,
-        [InstantHandle] ArchipelagoBuilder<Passage> entrances = default
+        [InstantHandle] ArchipelagoArrayBuilder<Passage> entrances = default
     ) =>
-        ref Region(name, logic, default(ArchipelagoBuilder<Region>), isStarting, entrances);
+        ref Region(name, logic, default(ArchipelagoArrayBuilder<Region>), isStarting, entrances);
 
     /// <summary>Adds or gets the existing region.</summary>
     /// <param name="name">Name of the region.</param>
@@ -457,9 +457,9 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
     public ref readonly Region Region(
         Chars name,
         Logic? logic = null,
-        [InstantHandle] ArchipelagoBuilder<Region> connectsTo = default,
+        [InstantHandle] ArchipelagoArrayBuilder<Region> connectsTo = default,
         bool isStarting = false,
-        [InstantHandle] ArchipelagoBuilder<Passage> entrances = default
+        [InstantHandle] ArchipelagoArrayBuilder<Passage> entrances = default
     )
     {
         ref var region = ref Ref(Regions, name, out var exists);
@@ -474,13 +474,13 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
         return ref region;
     }
 
-    /// <inheritdoc cref="Region(Chars, Logic, ArchipelagoBuilder{Domains.Region}, bool, ArchipelagoBuilder{Passage})"/>
+    /// <inheritdoc cref="Region(Chars, Logic, ArchipelagoArrayBuilder{T}, bool, ArchipelagoArrayBuilder{T})"/>
     public ref readonly Region Region(
         Chars name,
         Logic? logic = null,
-        [InstantHandle] ArchipelagoBuilder<Passage> connectsTo = default,
+        [InstantHandle] ArchipelagoArrayBuilder<Passage> connectsTo = default,
         bool isStarting = false,
-        [InstantHandle] ArchipelagoBuilder<Passage> entrances = default
+        [InstantHandle] ArchipelagoArrayBuilder<Passage> entrances = default
     )
     {
         ref var region = ref Ref(Regions, name, out var exists);
@@ -622,7 +622,7 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
     /// <summary>Gives the function that evaluates whether the category matches any values in the parameter.</summary>
     /// <param name="builder">The <see cref="ImmutableArray{T}"/> containing what to match.</param>
     /// <returns>The function that tests for the <see cref="Domains.Category"/>.</returns>
-    static Func<Category, bool> Match(ArchipelagoBuilder<Category> builder) =>
+    static Func<Category, bool> Match(ArchipelagoArrayBuilder<Category> builder) =>
         x => builder.Any(y => y.Name.Span.Equals(x.Name.Span, StringComparison.Ordinal));
 
     /// <summary>

@@ -3,15 +3,15 @@ namespace Emik.Manual.Domains;
 #pragma warning disable CA1710, IDE0028, MA0016
 /// <summary>Builds the collection containing elements of <see cref="Category"/> or <see cref="Item"/>.</summary>
 [StructLayout(LayoutKind.Auto)]
-public readonly partial struct CategoryAndItemBuilder : IAddTo,
+public readonly partial struct CategoryAndItemArrayBuilder : IAddTo,
     ICollection<Category>,
     ICollection<Item>,
     IComparable,
     IComparable<object>,
-    IComparable<CategoryAndItemBuilder>,
-    IComparisonOperators<CategoryAndItemBuilder, CategoryAndItemBuilder, bool>,
+    IComparable<CategoryAndItemArrayBuilder>,
+    IComparisonOperators<CategoryAndItemArrayBuilder, CategoryAndItemArrayBuilder, bool>,
     IEquatable<object>,
-    IEquatable<CategoryAndItemBuilder>
+    IEquatable<CategoryAndItemArrayBuilder>
 {
     /// <summary>The category builder.</summary>
     [ProvidesContext]
@@ -21,34 +21,34 @@ public readonly partial struct CategoryAndItemBuilder : IAddTo,
     [ProvidesContext]
     readonly ImmutableArray<Item>.Builder _items;
 
-    /// <summary>Initializes a new instance of the <see cref="CategoryAndItemBuilder"/> struct.</summary>
-    public CategoryAndItemBuilder()
+    /// <summary>Initializes a new instance of the <see cref="CategoryAndItemArrayBuilder"/> struct.</summary>
+    public CategoryAndItemArrayBuilder()
     {
         _items = ImmutableArray.CreateBuilder<Item>();
         _categories = ImmutableArray.CreateBuilder<Category>();
     }
 
-    /// <summary>Initializes a new instance of the <see cref="CategoryAndItemBuilder"/> struct.</summary>
+    /// <summary>Initializes a new instance of the <see cref="CategoryAndItemArrayBuilder"/> struct.</summary>
     /// <param name="category">The <see cref="Category"/> to add.</param>
-    public CategoryAndItemBuilder(Category category)
+    public CategoryAndItemArrayBuilder(Category category)
     {
         _items = ImmutableArray.CreateBuilder<Item>(0);
         (_categories = ImmutableArray.CreateBuilder<Category>(1)).Add(category);
     }
 
-    /// <summary>Initializes a new instance of the <see cref="CategoryAndItemBuilder"/> struct.</summary>
+    /// <summary>Initializes a new instance of the <see cref="CategoryAndItemArrayBuilder"/> struct.</summary>
     /// <param name="item">The <see cref="Item"/> to add.</param>
-    public CategoryAndItemBuilder(Item item)
+    public CategoryAndItemArrayBuilder(Item item)
     {
         _categories = ImmutableArray.CreateBuilder<Category>(0);
         (_items = ImmutableArray.CreateBuilder<Item>(1)).Add(item);
     }
 
-    /// <summary>Gets the categories as <see cref="ArchipelagoBuilder{T}"/>.</summary>
-    public ArchipelagoBuilder<Category> CategoryBuilder => new(_categories);
+    /// <summary>Gets the categories as <see cref="ArchipelagoArrayBuilder{T}"/>.</summary>
+    public ArchipelagoArrayBuilder<Category> CategoryBuilder => new(_categories);
 
-    /// <summary>Gets the items as <see cref="ArchipelagoBuilder{T}"/>.</summary>
-    public ArchipelagoBuilder<Item> ItemBuilder => new(_items);
+    /// <summary>Gets the items as <see cref="ArchipelagoArrayBuilder{T}"/>.</summary>
+    public ArchipelagoArrayBuilder<Item> ItemBuilder => new(_items);
 
     /// <inheritdoc />
     [Pure]
@@ -74,30 +74,30 @@ public readonly partial struct CategoryAndItemBuilder : IAddTo,
 
     /// <inheritdoc />
     [Pure]
-    public static bool operator ==(CategoryAndItemBuilder left, CategoryAndItemBuilder right) => left.Equals(right);
+    public static bool operator ==(CategoryAndItemArrayBuilder left, CategoryAndItemArrayBuilder right) => left.Equals(right);
 
     /// <inheritdoc />
     [Pure]
-    public static bool operator !=(CategoryAndItemBuilder left, CategoryAndItemBuilder right) => !left.Equals(right);
+    public static bool operator !=(CategoryAndItemArrayBuilder left, CategoryAndItemArrayBuilder right) => !left.Equals(right);
 
     /// <inheritdoc />
     [Pure]
-    public static bool operator >(CategoryAndItemBuilder left, CategoryAndItemBuilder right) =>
+    public static bool operator >(CategoryAndItemArrayBuilder left, CategoryAndItemArrayBuilder right) =>
         left.CompareTo(right) > 0;
 
     /// <inheritdoc />
     [Pure]
-    public static bool operator >=(CategoryAndItemBuilder left, CategoryAndItemBuilder right) =>
+    public static bool operator >=(CategoryAndItemArrayBuilder left, CategoryAndItemArrayBuilder right) =>
         left.CompareTo(right) >= 0;
 
     /// <inheritdoc />
     [Pure]
-    public static bool operator <(CategoryAndItemBuilder left, CategoryAndItemBuilder right) =>
+    public static bool operator <(CategoryAndItemArrayBuilder left, CategoryAndItemArrayBuilder right) =>
         left.CompareTo(right) < 0;
 
     /// <inheritdoc />
     [Pure]
-    public static bool operator <=(CategoryAndItemBuilder left, CategoryAndItemBuilder right) =>
+    public static bool operator <=(CategoryAndItemArrayBuilder left, CategoryAndItemArrayBuilder right) =>
         left.CompareTo(right) <= 0;
 
     /// <inheritdoc cref="ImmutableArray{T}.Builder.Add"/>
@@ -132,13 +132,13 @@ public readonly partial struct CategoryAndItemBuilder : IAddTo,
             (value ??= new JsonObject())["items"] = items;
     }
 
-    /// <inheritdoc cref="ArchipelagoBuilder{T}.Sync(Dictionary{string, T}, Priority, bool)"/>
+    /// <inheritdoc cref="ArchipelagoArrayBuilder{T}.Sync(Dictionary{string, T}, Priority, bool)"/>
     public void Sync(Dictionary<string, Category> dictionary, Priority fallback = Priority.None, bool strict = true) =>
-        new ArchipelagoBuilder<Category>(_categories).Sync(dictionary, fallback, strict);
+        new ArchipelagoArrayBuilder<Category>(_categories).Sync(dictionary, fallback, strict);
 
-    /// <inheritdoc cref="ArchipelagoBuilder{T}.Sync(Dictionary{string, T}, Priority, bool)"/>
+    /// <inheritdoc cref="ArchipelagoArrayBuilder{T}.Sync(Dictionary{string, T}, Priority, bool)"/>
     public void Sync(Dictionary<string, Item> dictionary, Priority fallback = Priority.None, bool strict = true) =>
-        new ArchipelagoBuilder<Item>(_items).Sync(dictionary, fallback, strict);
+        new ArchipelagoArrayBuilder<Item>(_items).Sync(dictionary, fallback, strict);
 
     /// <inheritdoc />
     [Pure]
@@ -150,11 +150,11 @@ public readonly partial struct CategoryAndItemBuilder : IAddTo,
 
     /// <inheritdoc cref="object.Equals(object)"/>
     [Pure]
-    public override bool Equals(object? obj) => obj is CategoryAndItemBuilder builder && Equals(builder);
+    public override bool Equals(object? obj) => obj is CategoryAndItemArrayBuilder builder && Equals(builder);
 
     /// <inheritdoc />
     [Pure]
-    public bool Equals(CategoryAndItemBuilder other)
+    public bool Equals(CategoryAndItemArrayBuilder other)
     {
         // ReSharper disable ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
         if (_items is null)
@@ -197,11 +197,11 @@ public readonly partial struct CategoryAndItemBuilder : IAddTo,
 
     /// <inheritdoc cref="IComparable.CompareTo"/>
     [Pure]
-    public int CompareTo(object? other) => CompareTo(other is CategoryAndItemBuilder builder ? builder : default);
+    public int CompareTo(object? other) => CompareTo(other is CategoryAndItemArrayBuilder builder ? builder : default);
 
     /// <inheritdoc />
     [Pure]
-    public int CompareTo(CategoryAndItemBuilder other)
+    public int CompareTo(CategoryAndItemArrayBuilder other)
     {
         // ReSharper disable ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
         if (_items is null)

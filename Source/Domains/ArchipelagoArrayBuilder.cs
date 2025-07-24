@@ -4,30 +4,30 @@ namespace Emik.Manual.Domains;
 /// <summary>Builds the <see cref="ImmutableArray{T}"/> while allowing implicit conversions.</summary>
 /// <typeparam name="T">The type of collection.</typeparam>
 [StructLayout(LayoutKind.Auto)]
-public readonly partial struct ArchipelagoBuilder<T> : IList<T>,
+public readonly partial struct ArchipelagoArrayBuilder<T> : IList<T>,
     IComparable,
     IComparable<object>,
-    IComparable<ArchipelagoBuilder<T>>,
-    IComparisonOperators<ArchipelagoBuilder<T>, ArchipelagoBuilder<T>, bool>,
+    IComparable<ArchipelagoArrayBuilder<T>>,
+    IComparisonOperators<ArchipelagoArrayBuilder<T>, ArchipelagoArrayBuilder<T>, bool>,
     IEquatable<object>,
-    IEquatable<ArchipelagoBuilder<T>>
+    IEquatable<ArchipelagoArrayBuilder<T>>
     where T : IArchipelago<T>
 {
     /// <summary>The builder.</summary>
     [ProvidesContext]
     readonly ImmutableArray<T>.Builder _builder;
 
-    /// <summary>Initializes a new instance of the <see cref="ArchipelagoBuilder{T}"/> struct.</summary>
-    public ArchipelagoBuilder() => _builder = ImmutableArray.CreateBuilder<T>();
+    /// <summary>Initializes a new instance of the <see cref="ArchipelagoArrayBuilder{T}"/> struct.</summary>
+    public ArchipelagoArrayBuilder() => _builder = ImmutableArray.CreateBuilder<T>();
 
-    /// <summary>Initializes a new instance of the <see cref="ArchipelagoBuilder{T}"/> struct.</summary>
+    /// <summary>Initializes a new instance of the <see cref="ArchipelagoArrayBuilder{T}"/> struct.</summary>
     /// <param name="item">The item to add.</param>
-    public ArchipelagoBuilder(string item)
+    public ArchipelagoArrayBuilder(string item)
         : this((T)item) { }
 
-    /// <summary>Initializes a new instance of the <see cref="ArchipelagoBuilder{T}"/> struct.</summary>
+    /// <summary>Initializes a new instance of the <see cref="ArchipelagoArrayBuilder{T}"/> struct.</summary>
     /// <param name="span">The span of elements to populate with.</param>
-    public ArchipelagoBuilder(ReadOnlySpan<string> span)
+    public ArchipelagoArrayBuilder(ReadOnlySpan<string> span)
     {
         _builder = ImmutableArray.CreateBuilder<T>(span.Length);
 
@@ -35,18 +35,18 @@ public readonly partial struct ArchipelagoBuilder<T> : IList<T>,
             _builder.Add(s);
     }
 
-    /// <summary>Initializes a new instance of the <see cref="ArchipelagoBuilder{T}"/> struct.</summary>
+    /// <summary>Initializes a new instance of the <see cref="ArchipelagoArrayBuilder{T}"/> struct.</summary>
     /// <param name="span">The span of elements to populate with.</param>
-    public ArchipelagoBuilder(ReadOnlySpan<T> span) =>
+    public ArchipelagoArrayBuilder(ReadOnlySpan<T> span) =>
         (_builder = ImmutableArray.CreateBuilder<T>(span.Length)).AddRange(span);
 
-    /// <summary>Initializes a new instance of the <see cref="ArchipelagoBuilder{T}"/> struct.</summary>
+    /// <summary>Initializes a new instance of the <see cref="ArchipelagoArrayBuilder{T}"/> struct.</summary>
     /// <param name="item">The item to add.</param>
-    public ArchipelagoBuilder(T item) => (_builder = ImmutableArray.CreateBuilder<T>(1)).Add(item);
+    public ArchipelagoArrayBuilder(T item) => (_builder = ImmutableArray.CreateBuilder<T>(1)).Add(item);
 
-    /// <summary>Initializes a new instance of the <see cref="ArchipelagoBuilder{T}"/> struct.</summary>
+    /// <summary>Initializes a new instance of the <see cref="ArchipelagoArrayBuilder{T}"/> struct.</summary>
     /// <param name="builder">The builder to use.</param>
-    internal ArchipelagoBuilder(ImmutableArray<T>.Builder builder) => _builder = builder;
+    internal ArchipelagoArrayBuilder(ImmutableArray<T>.Builder builder) => _builder = builder;
 
     /// <inheritdoc cref="ImmutableArray{T}.Builder.Capacity"/>
     [Pure]
@@ -92,38 +92,38 @@ public readonly partial struct ArchipelagoBuilder<T> : IList<T>,
     /// <param name="item">The item to wrap.</param>
     /// <returns>The list.</returns>
     [Pure]
-    public static implicit operator ArchipelagoBuilder<T>(string item) => new(item);
+    public static implicit operator ArchipelagoArrayBuilder<T>(string item) => new(item);
 
     /// <summary>Implicitly uses the constructor.</summary>
     /// <param name="item">The item to wrap.</param>
     /// <returns>The list.</returns>
     [Pure]
-    public static implicit operator ArchipelagoBuilder<T>(T item) => new(item);
+    public static implicit operator ArchipelagoArrayBuilder<T>(T item) => new(item);
 
     /// <inheritdoc />
     [Pure]
-    public static bool operator ==(ArchipelagoBuilder<T> left, ArchipelagoBuilder<T> right) => left.Equals(right);
+    public static bool operator ==(ArchipelagoArrayBuilder<T> left, ArchipelagoArrayBuilder<T> right) => left.Equals(right);
 
     /// <inheritdoc />
     [Pure]
-    public static bool operator !=(ArchipelagoBuilder<T> left, ArchipelagoBuilder<T> right) => !left.Equals(right);
+    public static bool operator !=(ArchipelagoArrayBuilder<T> left, ArchipelagoArrayBuilder<T> right) => !left.Equals(right);
 
     /// <inheritdoc />
     [Pure]
-    public static bool operator >(ArchipelagoBuilder<T> left, ArchipelagoBuilder<T> right) => left.CompareTo(right) > 0;
+    public static bool operator >(ArchipelagoArrayBuilder<T> left, ArchipelagoArrayBuilder<T> right) => left.CompareTo(right) > 0;
 
     /// <inheritdoc />
     [Pure]
-    public static bool operator >=(ArchipelagoBuilder<T> left, ArchipelagoBuilder<T> right) =>
+    public static bool operator >=(ArchipelagoArrayBuilder<T> left, ArchipelagoArrayBuilder<T> right) =>
         left.CompareTo(right) >= 0;
 
     /// <inheritdoc />
     [Pure]
-    public static bool operator <(ArchipelagoBuilder<T> left, ArchipelagoBuilder<T> right) => left.CompareTo(right) < 0;
+    public static bool operator <(ArchipelagoArrayBuilder<T> left, ArchipelagoArrayBuilder<T> right) => left.CompareTo(right) < 0;
 
     /// <inheritdoc />
     [Pure]
-    public static bool operator <=(ArchipelagoBuilder<T> left, ArchipelagoBuilder<T> right) =>
+    public static bool operator <=(ArchipelagoArrayBuilder<T> left, ArchipelagoArrayBuilder<T> right) =>
         left.CompareTo(right) <= 0;
 
     /// <summary>Syncs the <see cref="Dictionary{TKey, TValue}"/> and one reference to contain the same value.</summary>
@@ -261,11 +261,11 @@ public readonly partial struct ArchipelagoBuilder<T> : IList<T>,
 
     /// <inheritdoc cref="object.Equals(object)"/>
     [Pure]
-    public override bool Equals(object? obj) => obj is ArchipelagoBuilder<T> builder && Equals(builder);
+    public override bool Equals(object? obj) => obj is ArchipelagoArrayBuilder<T> builder && Equals(builder);
 
     /// <inheritdoc />
     [Pure]
-    public bool Equals(ArchipelagoBuilder<T> other)
+    public bool Equals(ArchipelagoArrayBuilder<T> other)
     {
         // ReSharper disable ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
         if (_builder is null)
@@ -289,11 +289,11 @@ public readonly partial struct ArchipelagoBuilder<T> : IList<T>,
 
     /// <inheritdoc cref="IComparable.CompareTo"/>
     [Pure]
-    public int CompareTo(object? other) => CompareTo(other is ArchipelagoBuilder<T> builder ? builder : default);
+    public int CompareTo(object? other) => CompareTo(other is ArchipelagoArrayBuilder<T> builder ? builder : default);
 
     /// <inheritdoc />
     [Pure]
-    public int CompareTo(ArchipelagoBuilder<T> other)
+    public int CompareTo(ArchipelagoArrayBuilder<T> other)
     {
         // ReSharper disable ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
         if (_builder is null)

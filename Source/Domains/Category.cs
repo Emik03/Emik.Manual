@@ -13,7 +13,7 @@ public readonly partial record struct Category(Chars Name, bool IsHidden = false
         IEqualityOperators<Category, Category, bool>,
         IEquatable<object>,
         ILogicNode<Category>,
-        IQuantitativeLogic
+        IQuantitativeLogicNode
 {
     /// <summary>Makes a requirement that the category should be obtained multiple times.</summary>
     /// <param name="count">The count to times to fulfill the requirement.</param>

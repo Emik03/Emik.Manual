@@ -2,7 +2,7 @@
 namespace Emik.Manual.Domains;
 
 /// <summary>Contains quantities to construct <see cref="Logic"/>.</summary>
-public interface IQuantitativeLogic
+public interface IQuantitativeLogicNode
 {
     /// <summary>Makes a requirement that this instance should be obtained a specific amount of times.</summary>
     /// <param name="count">The count to times to fulfill the requirement.</param>

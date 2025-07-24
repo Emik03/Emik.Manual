@@ -30,7 +30,7 @@ public readonly partial record struct Item(
     IEqualityOperators<Item, Item, bool>,
     IEquatable<object>,
     ILogicNode<Item>,
-    IQuantitativeLogic
+    IQuantitativeLogicNode
 {
     /// <summary>Makes a requirement that the item should be obtained multiple times.</summary>
     /// <param name="count">The count to times to fulfill the requirement.</param>

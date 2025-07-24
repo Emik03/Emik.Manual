@@ -361,7 +361,7 @@ public readonly partial record struct Game(
     /// <param name="items">The items to check.</param>
     /// <returns>The minimum <see cref="Item.Count"/>.</returns>
     [Pure]
-    static int Min(ArchipelagoBuilder<Item> items) => items.Aggregate(int.MaxValue, (a, n) => a.Min(n.Count));
+    static int Min(ArchipelagoArrayBuilder<Item> items) => items.Aggregate(int.MaxValue, (a, n) => a.Min(n.Count));
 
     /// <summary>Creates the yaml goal parameter.</summary>
     /// <param name="goals">The list of locations that can be goaled.</param>
@@ -471,7 +471,7 @@ public readonly partial record struct Game(
     /// <param name="categories">The categories to check.</param>
     /// <returns>The minimum <see cref="Item.Count"/>.</returns>
     [Pure]
-    int Min(ArchipelagoBuilder<Category> categories) =>
+    int Min(ArchipelagoArrayBuilder<Category> categories) =>
         World?.AllItemsWithAny(categories).Aggregate(int.MaxValue, (a, n) => a.Min(n.Count)) ?? 0;
 
     /// <summary>Gets the minimum number of items the block will take.</summary>

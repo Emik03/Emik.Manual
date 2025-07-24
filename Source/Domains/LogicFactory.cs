@@ -19,7 +19,7 @@ public static partial class LogicFactory
     /// and the parameter <paramref name="strict"/> is <see langword="true"/>.
     /// </exception>
     public static void Sync(
-        this in ArchipelagoBuilder<Passage> builder,
+        this in ArchipelagoArrayBuilder<Passage> builder,
         Dictionary<string, Category> categories,
         Dictionary<string, Item> items,
         Dictionary<string, Location> locations,
@@ -34,7 +34,7 @@ public static partial class LogicFactory
         for (int i = 0, count = builder.Count; i < count; i++)
         {
             var (region, logic) = builder[i];
-            ArchipelagoBuilder<Region>.Sync(regions, ref region, fallback, strict);
+            ArchipelagoArrayBuilder<Region>.Sync(regions, ref region, fallback, strict);
             logic?.ThrowIfUnset(categories, items, locations, regions, strict);
         }
     }
