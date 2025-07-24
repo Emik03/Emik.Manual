@@ -6,7 +6,7 @@ using Accumulator =
 
 /// <summary>Represents an element in the <c>regions.json</c> file.</summary>
 /// <param name="Name">Name of the region.</param>
-/// <param name="Logic">
+/// <param name="SelfLogic">
 /// The boolean logic object that describes the required items, counts, etc. needed to reach this region.
 /// </param>
 /// <param name="ConnectsTo">
@@ -25,13 +25,17 @@ using Accumulator =
 [StructLayout(LayoutKind.Auto)]
 public readonly partial record struct Region(
     Chars Name,
-    Logic? Logic = null,
+    Logic? SelfLogic = null,
     ImmutableArray<Region> ConnectsTo = default,
     bool IsStarting = false,
     ImmutableArray<Passage> Entrances = default,
     ImmutableArray<Passage> Exits = default
-) : IAddTo, IArchipelago<Region>, IEqualityOperators<Region, Region, bool>, IEquatable<object>
+) : IAddTo, IArchipelago<Region>, ILogicNode<Region>, IEqualityOperators<Region, Region, bool>, IEquatable<object>
 {
+    /// <summary>Gets itself as a <see cref="Logic"/> requirement.</summary>
+    [Pure]
+    public Logic Logic => new(this);
+
     /// <inheritdoc />
     [Pure]
     public static implicit operator Region(string? name) => new(name.AsMemory());
@@ -86,7 +90,7 @@ public readonly partial record struct Region(
             obj["entrance_requires"] = Json(Entrances, locations, regions);
 
         (value ??= new JsonObject())[Name.ToString()] = obj;
-        Logic?.CopyTo(ref value, locations, regions);
+        SelfLogic?.CopyTo(ref value, locations, regions);
     }
 
     /// <inheritdoc />
@@ -97,7 +101,7 @@ public readonly partial record struct Region(
     /// <param name="regions">All regions.</param>
     /// <returns>The combined logic.</returns>
     public Logic? ExpandedLogic(IReadOnlyCollection<Region>? regions) =>
-        regions is null || IsStarting ? Logic : regions.Aggregate((regions, Logic: (Logic?)null), Start).Logic;
+        regions is null || IsStarting ? SelfLogic : regions.Aggregate((regions, Logic: (Logic?)null), Start).Logic;
 
     /// <summary>Gets the starting regions, excluding itself.</summary>
     /// <param name="regions">All regions.</param>
@@ -139,8 +143,8 @@ public readonly partial record struct Region(
         a is var (visited, current, logic, _) &&
         Next(visited, current) is (var innerLogic, true) &&
         (innerLogic &
-            current.Exits.FirstOrDefault(x => x.Name == connection.Name)?.Logic &
-            connection.Entrances.FirstOrDefault(x => x.Name == current.Name)?.Logic) is var and
+            current.Exits.FirstOrDefault(x => x.Name == connection.Name)?.SelfLogic &
+            connection.Entrances.FirstOrDefault(x => x.Name == current.Name)?.SelfLogic) is var and
             ? a with { Logic = logic | and, Found = true }
             : a;
 
@@ -149,22 +153,19 @@ public readonly partial record struct Region(
     /// <param name="region">The potential starting region to start the search in.</param>
     /// <returns>The next accumulator.</returns>
     [Pure]
-    (IReadOnlyCollection<Region> Regions, Logic? Logic) Start(
-        (IReadOnlyCollection<Region> Regions, Logic? Logic) a,
-        Region region
-    ) =>
+    (IReadOnlyCollection<Region>, Logic?) Start((IReadOnlyCollection<Region> Regions, Logic? Logic) a, Region region) =>
         region.IsStarting && Next(region.Starters(a.Regions), region) is (var l, true)
             ? a with { Logic = a.Logic | l }
             : a;
 
     /// <summary>Performs the next step.</summary>
-    /// <param name="current">The current region to look at.</param>
     /// <param name="visited">The names of the visited regions.</param>
+    /// <param name="region">The current region to look at.</param>
     /// <returns>The logic to get to this area, and whether it is relevant.</returns>
     [Pure]
-    (Logic? Logic, bool Found) Next(HashSet<string>.AlternateLookup<ReadOnlySpan<char>> visited, Region current) =>
-        !visited.Add(current.Name.Span) ? default :
-        Name == current.Name ? (current.Logic, true) :
-        current.ConnectsTo is { IsDefaultOrEmpty: false } connections &&
-        connections.Aggregate((visited, current, (Logic?)null, false), Combine) is var (_, _, l, f) ? (l, f) : default;
+    (Logic?, bool) Next(HashSet<string>.AlternateLookup<ReadOnlySpan<char>> visited, Region region) =>
+        !visited.Add(region.Name.Span) ? default :
+        Name == region.Name ? (region.SelfLogic, true) :
+        region.ConnectsTo is { IsDefaultOrEmpty: false } connections &&
+        connections.Aggregate((visited, region, (Logic?)null, false), Combine) is var (_, _, l, f) ? (l, f) : default;
 }

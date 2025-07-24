@@ -8,7 +8,12 @@ namespace Emik.Manual.Domains;
 /// <seealso href="https://github.com/ManualForArchipelago/Manual/blob/main/docs/syntax/categories-for-items-and-locations.md"/>
 [StructLayout(LayoutKind.Auto)]
 public readonly partial record struct Category(Chars Name, bool IsHidden = false, params ImmutableArray<Yaml> Yaml)
-    : IAddTo, IArchipelago<Category>, IEqualityOperators<Category, Category, bool>, IEquatable<object>
+    : IAddTo,
+        IArchipelago<Category>,
+        IEqualityOperators<Category, Category, bool>,
+        IEquatable<object>,
+        ILogicNode<Category>,
+        IQuantitativeLogic
 {
     /// <summary>Makes a requirement that the category should be obtained multiple times.</summary>
     /// <param name="count">The count to times to fulfill the requirement.</param>
@@ -42,6 +47,10 @@ public readonly partial record struct Category(Chars Name, bool IsHidden = false
             return logic;
         }
     }
+
+    /// <summary>Gets itself as a <see cref="Logic"/> requirement.</summary>
+    [Pure]
+    public Logic Logic => new(this);
 
     /// <inheritdoc />
     [Pure]

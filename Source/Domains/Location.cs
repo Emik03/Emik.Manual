@@ -3,7 +3,7 @@ namespace Emik.Manual.Domains;
 
 /// <summary>Represents the element in the <c>locations.json</c> file.</summary>
 /// <param name="Name">The unique name of the location.</param>
-/// <param name="Logic">
+/// <param name="SelfLogic">
 /// A boolean logic object that describes the required items, counts, etc. needed to reach this location.
 /// </param>
 /// <param name="Categories">A list of categories to be applied to this location.</param>
@@ -36,7 +36,7 @@ namespace Emik.Manual.Domains;
 [StructLayout(LayoutKind.Auto)]
 public readonly partial record struct Location(
     Chars Name,
-    Logic? Logic = null,
+    Logic? SelfLogic = null,
     ImmutableArray<Category> Categories = default,
     Region Region = default,
     LocationOptions Options = LocationOptions.None,
@@ -46,8 +46,16 @@ public readonly partial record struct Location(
     ImmutableArray<Item> ItemDenyList = default,
     Chars HintEntrance = default,
     int? Id = null
-) : IAddTo, IArchipelago<Location>, IEqualityOperators<Location, Location, bool>, IEquatable<object>
+) : IAddTo,
+    IArchipelago<Location>,
+    IEqualityOperators<Location, Location, bool>,
+    IEquatable<object>,
+    ILogicNode<Location>
 {
+    /// <inheritdoc />
+    [Pure]
+    public Logic Logic => new(this);
+
     /// <inheritdoc />
     [Pure]
     public static implicit operator Location(string? name) => new(name.AsMemory());
@@ -89,7 +97,7 @@ public readonly partial record struct Location(
     )
     {
         JsonNode obj = new JsonObject { ["name"] = ToString() };
-        Logic?.CopyTo(ref obj, locations, regions);
+        SelfLogic?.CopyTo(ref obj, locations, regions);
 
         if (Id is { } id)
             obj["id"] = id;

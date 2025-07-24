@@ -576,8 +576,8 @@ public partial class World(Priority fallback = Priority.Progression, bool strict
             !obj.TryGetPropertyValue(x.Yaml, out var node) || // ReSharper disable once NullableWarningSuppressionIsUsed
             ((JsonObject)node!).ContainsKey("values") && x.IsToggle;
 
-        AllLocations.SelectMany(x => x.Logic?.YamlSettings ?? [])
-           .Concat(AllRegions.SelectMany(x => x.Logic?.YamlSettings ?? []))
+        AllLocations.SelectMany(x => x.SelfLogic?.YamlSettings ?? [])
+           .Concat(AllRegions.SelectMany(x => x.SelfLogic?.YamlSettings ?? []))
            .Select(Deconstruct)
            .Where(CanAdd)
            .Select(CreateJsonObject)

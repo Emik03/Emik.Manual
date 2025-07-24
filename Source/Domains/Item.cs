@@ -25,7 +25,12 @@ public readonly partial record struct Item(
     int Early = 0,
     int LocalEarly = 0,
     int? Id = null
-) : IAddTo, IArchipelago<Item>, IEqualityOperators<Item, Item, bool>, IEquatable<object>
+) : IAddTo,
+    IArchipelago<Item>,
+    IEqualityOperators<Item, Item, bool>,
+    IEquatable<object>,
+    ILogicNode<Item>,
+    IQuantitativeLogic
 {
     /// <summary>Makes a requirement that the item should be obtained multiple times.</summary>
     /// <param name="count">The count to times to fulfill the requirement.</param>
@@ -61,6 +66,10 @@ public readonly partial record struct Item(
             return logic;
         }
     }
+
+    /// <summary>Gets itself as a <see cref="Logic"/> requirement.</summary>
+    [Pure]
+    public Logic Logic => new(this);
 
     /// <inheritdoc />
     [Pure]

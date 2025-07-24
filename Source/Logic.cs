@@ -91,6 +91,16 @@ public sealed partial class Logic : IAddTo,
     public Logic(in Region region) => (Name, Type) = (region.Name, Kind.Region);
 
     /// <summary>Initializes a new instance of the <see cref="Logic"/> class.</summary>
+    /// <param name="passage">The passage.</param>
+    public Logic(in Passage passage)
+    {
+        if (passage.SelfLogic.IsRedundant())
+            (Name, Type) = (passage.Region.Name, Kind.Region);
+        else
+            (Left, Right, Type) = (passage.Region, passage.SelfLogic, Kind.And);
+    }
+
+    /// <summary>Initializes a new instance of the <see cref="Logic"/> class.</summary>
     /// <param name="location">The location.</param>
     public Logic(in Location location) => (Name, Type) = (location.Name, Kind.Location);
 
@@ -303,6 +313,12 @@ public sealed partial class Logic : IAddTo,
     /// <returns>The new <see cref="Logic"/> instance.</returns>
     [Pure]
     public static implicit operator Logic(in Region region) => new(region);
+
+    /// <summary>Implicitly invokes <see cref="Manual.Logic(in Passage)"/>.</summary>
+    /// <param name="passage">The passage.</param>
+    /// <returns>The new <see cref="Logic"/> instance.</returns>
+    [Pure]
+    public static implicit operator Logic(in Passage passage) => new(passage);
 
     /// <summary>Implicitly invokes <see cref="Manual.Logic(in Location)"/>.</summary>
     /// <param name="location">The location.</param>
@@ -667,7 +683,7 @@ public sealed partial class Logic : IAddTo,
                 Right?.ExpandLocations(locations, regions) is { } r ? Left | r : null,
             Kind.OptOne or Kind.OptAll when Left?.ExpandLocations(locations, regions) is { } opt => new(opt),
             Kind.Region when !IsUnset(regions, out var r) => r.ExpandedLogic(regions.Values),
-            Kind.Location when !IsUnset(locations, out var l) => l.Logic & l.Region.ExpandedLogic(regions.Values),
+            Kind.Location when !IsUnset(locations, out var l) => l.SelfLogic & l.Region.ExpandedLogic(regions.Values),
             _ => null,
         };
 
