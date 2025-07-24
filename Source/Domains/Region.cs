@@ -32,7 +32,7 @@ public readonly partial record struct Region(
     ImmutableArray<Passage> Exits = default
 ) : IAddTo, IArchipelago<Region>, ILogicNode<Region>, IEqualityOperators<Region, Region, bool>, IEquatable<object>
 {
-    /// <summary>Gets itself as a <see cref="Logic"/> requirement.</summary>
+    /// <summary>Gets itself as a <see cref="Manual.Logic"/> requirement.</summary>
     [Pure]
     public Logic Logic => new(this);
 
@@ -160,12 +160,12 @@ public readonly partial record struct Region(
 
     /// <summary>Performs the next step.</summary>
     /// <param name="visited">The names of the visited regions.</param>
-    /// <param name="region">The current region to look at.</param>
+    /// <param name="current">The current region to look at.</param>
     /// <returns>The logic to get to this area, and whether it is relevant.</returns>
     [Pure]
-    (Logic?, bool) Next(HashSet<string>.AlternateLookup<ReadOnlySpan<char>> visited, Region region) =>
-        !visited.Add(region.Name.Span) ? default :
-        Name == region.Name ? (region.SelfLogic, true) :
-        region.ConnectsTo is { IsDefaultOrEmpty: false } connections &&
-        connections.Aggregate((visited, region, (Logic?)null, false), Combine) is var (_, _, l, f) ? (l, f) : default;
+    (Logic?, bool) Next(HashSet<string>.AlternateLookup<ReadOnlySpan<char>> visited, Region current) =>
+        !visited.Add(current.Name.Span) ? default :
+        Name == current.Name ? (current.SelfLogic, true) :
+        current.ConnectsTo is { IsDefaultOrEmpty: false } connections &&
+        connections.Aggregate((visited, current, (Logic?)null, false), Combine) is var (_, _, l, f) ? (l, f) : default;
 }

@@ -48,7 +48,7 @@ public readonly partial record struct Category(Chars Name, bool IsHidden = false
         }
     }
 
-    /// <summary>Gets itself as a <see cref="Logic"/> requirement.</summary>
+    /// <summary>Gets itself as a <see cref="Manual.Logic"/> requirement.</summary>
     [Pure]
     public Logic Logic => new(this);
 
@@ -113,7 +113,7 @@ public readonly partial record struct Category(Chars Name, bool IsHidden = false
     /// Makes a requirement that items with this category should be obtained in at least some threshold percentage.
     /// </summary>
     /// <param name="percent">The percent.</param>
-    /// <returns>The new <see cref="Logic"/> instance.</returns>
+    /// <returns>The new <see cref="Manual.Logic"/> instance.</returns>
     [Pure]
     public Logic? Percent(int percent) => Logic.Percent(this, percent);
 
@@ -122,7 +122,7 @@ public readonly partial record struct Category(Chars Name, bool IsHidden = false
     /// </summary>
     /// <param name="index">The index.</param>
     /// <param name="scaling">The scaling per index.</param>
-    /// <returns>The new <see cref="Logic"/> instance.</returns>
+    /// <returns>The new <see cref="Manual.Logic"/> instance.</returns>
     [Pure]
     public Logic? Percent(double index, double scaling) => Logic.Percent(this, index, scaling);
 }

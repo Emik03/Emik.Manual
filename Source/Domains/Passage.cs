@@ -22,20 +22,20 @@ public sealed partial record Passage(Region Region, Logic? SelfLogic = null) : I
     /// <inheritdoc />
     public static implicit operator Passage(ReadOnlyMemory<char> name) => new(name);
 
-    /// <summary>Implicitly invokes <see cref="Domains.Passage(Domains.Region, Emik.Manual.Logic)"/>.</summary>
+    /// <summary>Implicitly invokes <see cref="Domains.Passage(Domains.Region, Manual.Logic)"/>.</summary>
     /// <param name="region">The region.</param>
-    /// <returns>The new <see cref="Logic"/> instance.</returns>
+    /// <returns>The new <see cref="Manual.Logic"/> instance.</returns>
     public static implicit operator Passage(Region region) => new(region);
 
-    /// <summary>Implicitly invokes <see cref="Domains.Passage(Domains.Region, Emik.Manual.Logic)"/>.</summary>
+    /// <summary>Implicitly invokes <see cref="Domains.Passage(Domains.Region, Manual.Logic)"/>.</summary>
     /// <param name="selfLogic">The region.</param>
-    /// <returns>The new <see cref="Logic"/> instance.</returns>
+    /// <returns>The new <see cref="Manual.Logic"/> instance.</returns>
     public static implicit operator Passage((Region Region, Logic? SelfLogic) selfLogic) =>
         new(selfLogic.Region, selfLogic.SelfLogic);
 
-    /// <summary>Implicitly invokes <see cref="Domains.Passage(Domains.Region, Emik.Manual.Logic)"/>.</summary>
+    /// <summary>Implicitly invokes <see cref="Domains.Passage(Domains.Region, Manual.Logic)"/>.</summary>
     /// <param name="selfLogic">The region.</param>
-    /// <returns>The new <see cref="Logic"/> instance.</returns>
+    /// <returns>The new <see cref="Manual.Logic"/> instance.</returns>
     public static implicit operator Passage((Logic? SelfLogic, Region Region) selfLogic) =>
         new(selfLogic.Region, selfLogic.SelfLogic);
 

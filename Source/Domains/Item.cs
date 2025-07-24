@@ -67,7 +67,7 @@ public readonly partial record struct Item(
         }
     }
 
-    /// <summary>Gets itself as a <see cref="Logic"/> requirement.</summary>
+    /// <summary>Gets itself as a <see cref="Manual.Logic"/> requirement.</summary>
     [Pure]
     public Logic Logic => new(this);
 
@@ -178,14 +178,14 @@ public readonly partial record struct Item(
 
     /// <summary>Makes a requirement that the item should be obtained in at least some threshold percentage.</summary>
     /// <param name="percent">The percent.</param>
-    /// <returns>The new <see cref="Logic"/> instance.</returns>
+    /// <returns>The new <see cref="Manual.Logic"/> instance.</returns>
     [Pure]
     public Logic? Percent(int percent) => Logic.Percent(this, percent);
 
     /// <summary>Makes a requirement that the item should be obtained in at least some threshold percentage.</summary>
     /// <param name="index">The index.</param>
     /// <param name="scaling">The scaling per index.</param>
-    /// <returns>The new <see cref="Logic"/> instance.</returns>
+    /// <returns>The new <see cref="Manual.Logic"/> instance.</returns>
     [Pure]
     public Logic? Percent(double index, double scaling) => Logic.Percent(this, index, scaling);
 }

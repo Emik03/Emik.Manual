@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: MPL-2.0
 namespace Emik.Manual.Domains;
 
-/// <summary>Contains operations to create <see cref="Logic"/> instances that contain itself.</summary>
+/// <summary>Contains operations to create <see cref="Manual.Logic"/> instances that contain itself.</summary>
 /// <typeparam name="T">The type that is implementing this interface.</typeparam>
 public interface ILogicNode<T>
     where T : ILogicNode<T>
 {
-    /// <summary>Gets itself as a <see cref="Logic"/> requirement.</summary>
+    /// <summary>Gets itself as a <see cref="Manual.Logic"/> requirement.</summary>
     [Pure]
     public Logic Logic { get; }
 
-    /// <summary>Gets the <see cref="Logic"/> requirement that this instance directly contains.</summary>
+    /// <summary>Gets the <see cref="Manual.Logic"/> requirement that this instance directly contains.</summary>
     [Pure]
     public Logic? SelfLogic => null;
 
