@@ -714,11 +714,11 @@ public sealed partial class Logic : IAddTo,
         Type switch
         {
             Kind.And => state is false
-                ? $"({Left?.ToString(true)} OR {Right?.ToString(true)})"
-                : $"{Left?.ToString(true)} OR {Right?.ToString(true)}",
+                ? $"({Left?.ToString(true)} AND {Right?.ToString(true)})"
+                : $"{Left?.ToString(true)} AND {Right?.ToString(true)}",
             Kind.Or => state is true
-                ? $"({Left?.ToString(false)} AND {Right?.ToString(false)})"
-                : $"{Left?.ToString(false)} AND {Right?.ToString(false)}",
+                ? $"({Left?.ToString(false)} OR {Right?.ToString(false)})"
+                : $"{Left?.ToString(false)} OR {Right?.ToString(false)}",
             Kind.Item => $"|{Name}|",
             Kind.ItemCount => $"|{Name}:{Count}|",
             Kind.ItemPercent => $"|{Name}:{Percentage}|",
