@@ -74,7 +74,7 @@ public readonly partial record struct Region(
         Dictionary<string, Region>? regions
     )
     {
-        JsonObject obj = [];
+        JsonNode obj = new JsonObject();
 
         if (IsStarting)
             obj["starting"] = true;
@@ -89,7 +89,7 @@ public readonly partial record struct Region(
             obj["entrance_requires"] = Json(Entrances, locations, regions);
 
         (value ??= new JsonObject())[Name.ToString()] = obj;
-        SelfLogic?.CopyTo(ref value, locations, regions);
+        SelfLogic?.CopyTo(ref obj, locations, regions);
     }
 
     /// <inheritdoc />
