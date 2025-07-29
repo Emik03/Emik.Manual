@@ -567,11 +567,6 @@ public sealed partial class Logic : IAddTo,
         bool strict = true
     )
     {
-        [DoesNotReturn]
-        static void Throw<T>(in T t)
-            where T : IArchipelago<T> =>
-            throw new KeyNotFoundException($"\"{t.Name}\" is referenced before it is defined in {typeof(T).Name}!");
-
         [Pure]
         static Category? FindFirstUnreferenced(ImmutableArray<Category> array, Dictionary<string, Category> dict)
         {
@@ -596,25 +591,25 @@ public sealed partial class Logic : IAddTo,
                 break;
             case Kind.Item or Kind.ItemCount or Kind.ItemPercent:
                 if (IsUnset(items, out var item))
-                    Throw(item);
+                    Throw<Item>();
 
                 if (FindFirstUnreferenced(item.Categories, categories) is { } itemCategory)
                     Throw(itemCategory);
 
                 break;
             case Kind.Category or Kind.CategoryCount or Kind.CategoryPercent:
-                if (IsUnset(categories, out var category))
-                    Throw(category);
+                if (IsUnset(categories, out _))
+                    Throw<Category>();
 
                 break;
             case Kind.Region:
-                if (IsUnset(regions, out var region))
-                    Throw(region);
+                if (IsUnset(regions, out _))
+                    Throw<Region>();
 
                 break;
             case Kind.Location:
                 if (IsUnset(locations, out var location))
-                    Throw(location);
+                    Throw<Location>();
 
                 if (FindFirstUnreferenced(location.Categories, categories) is { } locationCategory)
                     Throw(locationCategory);
@@ -688,6 +683,23 @@ public sealed partial class Logic : IAddTo,
             _ => this,
         };
 
+    /// <summary>Throws the exception.</summary>
+    /// <typeparam name="T">The type of the value that is unreferenced.</typeparam>
+    /// <param name="t">The value that is unreferenced.</param>
+    /// <exception cref="KeyNotFoundException">The exception that is thrown.</exception>
+    [DoesNotReturn]
+    static void Throw<T>(in T t)
+        where T : IArchipelago<T> =>
+        throw new KeyNotFoundException($"\"{t.Name}\" is referenced before it is defined in {typeof(T).Name}!");
+
+    /// <summary>Throws the exception.</summary>
+    /// <typeparam name="T">The type of the value that is unreferenced.</typeparam>
+    /// <exception cref="KeyNotFoundException">The exception that is thrown.</exception>
+    [DoesNotReturn]
+    void Throw<T>()
+        where T : IArchipelago<T> =>
+        throw new KeyNotFoundException($"\"{Name}\" is referenced before it is defined in {typeof(T).Name}!");
+
     /// <summary>Gets the value determining whether the item is unreferenced.</summary>
     /// <typeparam name="TValue">The type of value in the dictionary.</typeparam>
     /// <param name="dict">The dictionary to compare against.</param>
@@ -698,14 +710,11 @@ public sealed partial class Logic : IAddTo,
     [Pure]
     bool IsUnset<TValue>(Dictionary<string, TValue>? dict, out TValue? result)
     {
-        if (dict is null)
-        {
-            Unsafe.SkipInit(out result);
-            return true;
-        }
+        if (dict is not null)
+            return !dict.GetAlternateLookup<ReadOnlySpan<char>>().TryGetValue(Name.Span, out result);
 
-        result = CollectionsMarshal.GetValueRefOrNullRef(dict.GetAlternateLookup<ReadOnlySpan<char>>(), Name.Span);
-        return Unsafe.IsNullRef(result);
+        Unsafe.SkipInit(out result);
+        return true;
     }
 
     /// <inheritdoc cref="object.ToString"/>
