@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 namespace Emik.Manual.Domains;
 
-using Accumulator =
-    (HashSet<string>.AlternateLookup<ReadOnlySpan<char>> Visited, Region Current, Logic? Logic, bool Found);
+using Accumulator = (HashSet<string> Visited, Region Current, Logic? Logic, bool Found);
 
 /// <summary>Represents an element in the <c>regions.json</c> file.</summary>
 /// <param name="Name">Name of the region.</param>
@@ -107,14 +106,13 @@ public readonly partial record struct Region(
     /// <param name="regions">All regions.</param>
     /// <returns>The starting regions, excluding itself.</returns>
     [Pure]
-    HashSet<string>.AlternateLookup<ReadOnlySpan<char>> Starters(IEnumerable<Region> regions)
+    HashSet<string> Starters(IEnumerable<Region> regions)
     {
         var name = Name;
 
         return regions.Where(x => x.IsStarting && x.Name != name)
            .Select(x => x.Name.ToString())
-           .ToSet(StringComparer.Ordinal)
-           .GetAlternateLookup<ReadOnlySpan<char>>();
+           .ToSet(StringComparer.Ordinal);
     }
 
     /// <inheritdoc cref="IArchipelago{T}.Json(ImmutableArray{T})"/>
@@ -128,8 +126,8 @@ public readonly partial record struct Region(
         JsonObject ret = [];
 
         foreach (var (region, logic) in span)
-            if (logic is not null)
-                ret[region.Name.ToString()] = (logic.ExpandLocations(locations, regions) ?? logic).ToString();
+            if (logic?.Expanded(locations, regions) is { } l)
+                ret[region.Name.ToString()] = l.ToString();
 
         return ret;
     }
@@ -141,7 +139,7 @@ public readonly partial record struct Region(
     [Pure]
     Accumulator Combine(Accumulator a, Region connection) =>
         a is var (visited, current, logic, _) &&
-        Next(visited, current) is (var innerLogic, true) &&
+        Next(new(visited, StringComparer.Ordinal), connection) is (var innerLogic, true) &&
         (innerLogic &
             current.Exits.FirstOrDefault(x => x.Name == connection.Name)?.SelfLogic &
             connection.Entrances.FirstOrDefault(x => x.Name == current.Name)?.SelfLogic) is var and
@@ -163,9 +161,10 @@ public readonly partial record struct Region(
     /// <param name="current">The current region to look at.</param>
     /// <returns>The logic to get to this area, and whether it is relevant.</returns>
     [Pure]
-    (Logic?, bool) Next(HashSet<string>.AlternateLookup<ReadOnlySpan<char>> visited, Region current) =>
-        !visited.Add(current.Name.Span) ? default :
+    (Logic?, bool) Next(HashSet<string> visited, Region current) =>
+        !visited.GetAlternateLookup<ReadOnlySpan<char>>().Add(current.Name.Span) ? default :
         Name == current.Name ? (current.SelfLogic, true) :
         current.ConnectsTo is { IsDefaultOrEmpty: false } connections &&
-        connections.Aggregate((visited, current, (Logic?)null, false), Combine) is var (_, _, l, f) ? (l, f) : default;
+        connections.Aggregate((visited, current, (Logic?)null, false), Combine) is var (_, _, l, f) ? (l, f) :
+        default;
 }

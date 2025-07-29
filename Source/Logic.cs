@@ -543,8 +543,11 @@ public sealed partial class Logic : IAddTo,
         [NotNullIfNotNull(nameof(value))] ref JsonNode? value,
         Dictionary<string, Location>? locations,
         Dictionary<string, Region>? regions
-    ) =>
-        (value ??= new JsonObject())["requires"] = (ExpandLocations(locations, regions) ?? this).ToString();
+    )
+    {
+        if (Expanded(locations, regions) is { } logic)
+            (value ??= new JsonObject())["requires"] = logic.ToString();
+    }
 
     /// <summary>Throws if an unreferenced element is found.</summary>
     /// <param name="categories">The referenced categories.</param>
@@ -666,25 +669,23 @@ public sealed partial class Logic : IAddTo,
     [Pure]
     public override string ToString() => ToString(false);
 
-    /// <summary>Inlines all use of <see cref="Builtin.CanReachLocation"/>.</summary>
+    /// <summary>Inlines all use of <see cref="Builtin.CanReachLocation"/> and <see cref="Kind.Region"/>.</summary>
     /// <param name="locations">The locations.</param>
     /// <param name="regions">The regions.</param>
     /// <returns>The inlined logic.</returns>
     [Pure]
-    public Logic? ExpandLocations(Dictionary<string, Location>? locations, Dictionary<string, Region>? regions) =>
+    public Logic? Expanded(Dictionary<string, Location>? locations, Dictionary<string, Region>? regions) =>
         Type switch
         {
-            _ when regions is null => null,
-            Kind.And => Left?.ExpandLocations(locations, regions) is { } l &&
-                (Right?.ExpandLocations(locations, regions) ?? Right) is var ir ? l & ir :
-                Right?.ExpandLocations(locations, regions) is { } r ? Left & r : null,
-            Kind.Or => Left?.ExpandLocations(locations, regions) is { } l &&
-                (Right?.ExpandLocations(locations, regions) ?? Right) is var ir ? l | ir :
-                Right?.ExpandLocations(locations, regions) is { } r ? Left | r : null,
-            Kind.OptOne or Kind.OptAll when Left?.ExpandLocations(locations, regions) is { } opt => new(opt),
-            Kind.Region when !IsUnset(regions, out var r) => r.ExpandedLogic(regions.Values),
-            Kind.Location when !IsUnset(locations, out var l) => l.SelfLogic & l.Region.ExpandedLogic(regions.Values),
-            _ => null,
+            _ when regions is null => this,
+            Kind.And => Left?.Expanded(locations, regions) & Right?.Expanded(locations, regions),
+            Kind.Or => Left?.Expanded(locations, regions) | Right?.Expanded(locations, regions),
+            Kind.OptOne or Kind.OptAll when Left?.Expanded(locations, regions) is { } opt => new(opt),
+            Kind.Region when !IsUnset(regions, out var r)
+                => r.IsStarting ? r.SelfLogic : r.ExpandedLogic(regions.Values),
+            Kind.Location when !IsUnset(locations, out var l)
+                => l.SelfLogic & (l.Region.IsStarting ? l.Region.SelfLogic : l.Region.ExpandedLogic(regions.Values)),
+            _ => this,
         };
 
     /// <summary>Gets the value determining whether the item is unreferenced.</summary>
@@ -695,7 +696,7 @@ public sealed partial class Logic : IAddTo,
     /// Whether the field <see cref="Name"/> is not referenced in the parameter <paramref name="dict"/>.
     /// </returns>
     [Pure]
-    bool IsUnset<TValue>(Dictionary<string, TValue>? dict, out TValue result)
+    bool IsUnset<TValue>(Dictionary<string, TValue>? dict, out TValue? result)
     {
         if (dict is null)
         {

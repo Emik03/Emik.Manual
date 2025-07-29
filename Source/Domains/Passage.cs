@@ -64,9 +64,8 @@ public sealed partial record Passage(Region Region, Logic? SelfLogic = null) : I
         Dictionary<string, Region>? regions
     )
     {
-        if (SelfLogic is not null)
-            (value ??= new JsonObject())[Name.ToString()] =
-                (SelfLogic.ExpandLocations(locations, regions) ?? SelfLogic).ToString();
+        if (SelfLogic?.Expanded(locations, regions) is { } logic)
+            (value ??= new JsonObject())[Name.ToString()] = logic.ToString();
     }
 
     /// <inheritdoc />
