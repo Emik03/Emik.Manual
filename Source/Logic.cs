@@ -456,9 +456,9 @@ public sealed partial class Logic : IAddTo,
         right.Type is Kind.And && (right.Left == right || right.Right == right) ? right.Check(left) :
         // This code was never in the bible.
         left.Type is Kind.And && (left.Left & right) is { IsOptimized: true } ll ? new(ll, left.Right, Kind.And) :
-        left.Type is Kind.And && (left.Left & right) is { IsOptimized: true } rl ? new(rl, left.Right, Kind.And) :
+        left.Type is Kind.And && (left.Right & right) is { IsOptimized: true } rl ? new(rl, left.Left, Kind.And) :
         right.Type is Kind.And && (left & right.Left) is { IsOptimized: true } lr ? new(right.Right, lr, Kind.And) :
-        right.Type is Kind.And && (left & right.Left) is { IsOptimized: true } rr ? new(right.Right, rr, Kind.And) :
+        right.Type is Kind.And && (left & right.Right) is { IsOptimized: true } rr ? new(right.Left, rr, Kind.And) :
         // We cannot optimize this.
         new(left, right, Kind.And);
 
