@@ -662,7 +662,7 @@ public sealed partial class Logic : IAddTo,
 
     /// <inheritdoc />
     [Pure]
-    public override string ToString() => ToString(false);
+    public override string ToString() => ToString(null);
 
     /// <summary>Inlines all use of <see cref="Builtin.CanReachLocation"/> and <see cref="Kind.Region"/>.</summary>
     /// <param name="locations">The locations.</param>
