@@ -7,4 +7,8 @@
         <Description>Library to programmatically create manual .apworld files.</Description>
         <PackageTags>Archipelago MultiWorld MW Manual Multigame Multi Game Randomizer Generation APWorld AP World</PackageTags>
     </PropertyGroup>
+    <ItemGroup>
+        <Compile Include="$(Morsels)/Compile/**/*.cs"/>
+        <PackageReference Include="Emik.Analyzers.Matches" Version="1.3.3"/>
+    </ItemGroup>
 </Project>
