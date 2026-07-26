@@ -33,12 +33,12 @@ public sealed partial class Logic
         Category,
 
         /// <summary>
-        /// A particular amount of an <see cref="Category"/> must be obtained for this node to be fulfilled.
+        /// A particular amount of a <see cref="Category"/> must be obtained for this node to be fulfilled.
         /// </summary>
         CategoryCount,
 
         /// <summary>
-        /// A particular percentage of an <see cref="Category"/> must be obtained for this node to be fulfilled.
+        /// A particular percentage of a <see cref="Category"/> must be obtained for this node to be fulfilled.
         /// </summary>
         CategoryPercent,
 
@@ -58,6 +58,30 @@ public sealed partial class Logic
 
         /// <summary><see cref="Left"/> must be fulfilled or not exist for this node to be fulfilled.</summary>
         OptAll,
+
+        /// <summary>
+        /// A particular amount specified by the yaml of an <see cref="Item"/>
+        /// must be obtained for this node to be fulfilled.
+        /// </summary>
+        OptItemCount,
+
+        /// <summary>
+        /// A particular percentage specified by the yaml of an <see cref="Item"/>
+        /// must be obtained for this node to be fulfilled.
+        /// </summary>
+        OptItemPercent,
+
+        /// <summary>
+        /// A particular amount specified by the yaml of a <see cref="Category"/>
+        /// must be obtained for this node to be fulfilled.
+        /// </summary>
+        OptCategoryCount,
+
+        /// <summary>
+        /// A particular percentage specified by the yaml of a <see cref="Category"/>
+        /// must be obtained for this node to be fulfilled.
+        /// </summary>
+        OptCategoryPercent,
 
         /// <summary>The option must be enabled for this node to be fulfilled.</summary>
         YamlEnabled,

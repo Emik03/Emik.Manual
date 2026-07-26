@@ -10,6 +10,11 @@ public interface IQuantitativeLogicNode
     [Pure]
     public Logic? this[int count] { get; }
 
+    /// <summary>Makes a requirement that this instance should be obtained multiple times.</summary>
+    /// <param name="yaml">The yaml.</param>
+    [Pure]
+    public Logic this[Yaml yaml] { get; }
+
     /// <summary>Makes a requirement that all of this instance should be obtained.</summary>
     [Pure]
     public Logic All { get; }
@@ -34,4 +39,12 @@ public interface IQuantitativeLogicNode
     /// <returns>The new <see cref="Logic"/> instance.</returns>
     [Pure]
     public Logic? Percent(double index, double scaling);
+
+    /// <summary>
+    /// Makes a requirement that items with this instance should be obtained in at least some threshold percentage.
+    /// </summary>
+    /// <param name="yaml">The yaml.</param>
+    /// <returns>The new <see cref="Logic"/> instance.</returns>
+    [Pure]
+    public Logic? Percent(Yaml yaml);
 }

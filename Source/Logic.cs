@@ -111,6 +111,12 @@ public sealed partial class Logic : IAddTo,
     internal Logic(Chars chars, int count, Kind kind) => (Name, Count, Type) = (chars, count, kind);
 
     /// <summary>Initializes a new instance of the <see cref="Logic"/> class.</summary>
+    /// <param name="chars">The chars.</param>
+    /// <param name="yaml">The yaml.</param>
+    /// <param name="kind">The kind.</param>
+    internal Logic(Chars chars, Yaml yaml, Kind kind) => (Left, Name, Type) = (chars, yaml.Name, kind);
+
+    /// <summary>Initializes a new instance of the <see cref="Logic"/> class.</summary>
     /// <param name="opt">The option.</param>
     internal Logic(Logic? opt) =>
         (Left, Type) = (opt, opt?.Type is Kind.Item or Kind.ItemCount or Kind.Category or Kind.CategoryCount
@@ -185,6 +191,8 @@ public sealed partial class Logic : IAddTo,
             Kind.OptAll => Builtin.OptAll,
             Kind.YamlEnabled => Builtin.YamlEnabled,
             Kind.YamlDisabled => Builtin.YamlDisabled,
+            Kind.OptItemCount or Kind.OptCategoryCount => Builtin.OptionCount,
+            Kind.OptItemPercent or Kind.OptCategoryPercent => Builtin.OptionCountPercent,
             Kind.YamlEqual or
                 Kind.YamlNotEqual or
                 Kind.YamlGreaterThan or
@@ -206,6 +214,8 @@ public sealed partial class Logic : IAddTo,
                 ? Right?.YamlSettings is { } leftRight ? left.Concat(leftRight) : left
                 : Right?.YamlSettings,
             Kind.OptOne or Kind.OptAll => Left?.YamlSettings,
+            Kind.OptItemCount or Kind.OptCategoryCount => [(Builtin.OptionCount, new(Name))],
+            Kind.OptItemPercent or Kind.OptCategoryPercent => [(Builtin.OptionCountPercent, new(Name))],
             Kind.YamlEnabled or
                 Kind.YamlDisabled or
                 Kind.YamlEqual or
@@ -476,7 +486,7 @@ public sealed partial class Logic : IAddTo,
     [Pure]
     public static Logic Enabled(Yaml yaml) => new(yaml.Name, Kind.YamlEnabled);
 
-    /// <summary>Creates the <see cref="Logic"/> requiring a percentage of a given <see cref="Item"/>.</summary>
+    /// <summary>Creates the <see cref="Logic"/> requiring a percentage of a given <see cref="Category"/>.</summary>
     /// <param name="category">The category.</param>
     /// <param name="percent">The percent.</param>
     /// <returns>
@@ -496,6 +506,15 @@ public sealed partial class Logic : IAddTo,
     [Pure]
     public static Logic? Percent(in Category category, double index, double scaling = 1) =>
         Percent(category, (int)(index * scaling));
+
+    /// <summary>Creates the <see cref="Logic"/> requiring a percentage of a given <see cref="Category"/>.</summary>
+    /// <param name="category">The category.</param>
+    /// <param name="yaml">The yaml.</param>
+    /// <returns>
+    /// The <see cref="Logic"/> object requiring a specific amount of the parameter <paramref name="category"/>.
+    /// </returns>
+    [Pure]
+    public static Logic Percent(in Category category, Yaml yaml) => new(category.Name, yaml, Kind.OptCategoryPercent);
 
     /// <summary>Creates the <see cref="Logic"/> requiring a percentage of a given <see cref="Item"/>.</summary>
     /// <param name="item">The item.</param>
@@ -517,6 +536,15 @@ public sealed partial class Logic : IAddTo,
     [Pure]
     public static Logic? Percent(in Item item, double index, double scaling = 1) =>
         Percent(item, (int)(index * scaling));
+
+    /// <summary>Creates the <see cref="Logic"/> requiring a percentage of a given <see cref="Item"/>.</summary>
+    /// <param name="item">The category.</param>
+    /// <param name="yaml">The yaml.</param>
+    /// <returns>
+    /// The <see cref="Logic"/> object requiring a specific amount of the parameter <paramref name="item"/>.
+    /// </returns>
+    [Pure]
+    public static Logic Percent(in Item item, Yaml yaml) => new(item.Name, yaml, Kind.OptItemPercent);
 
     /// <summary>Creates the <see cref="Logic"/> object of <see cref="Builtin.ItemValue"/>.</summary>
     /// <param name="phantomItem">The phantom item.</param>
@@ -740,6 +768,10 @@ public sealed partial class Logic : IAddTo,
             Kind.ItemValue => $"{{{nameof(Builtin.ItemValue)}({Name}:{Count})}}",
             Kind.OptOne => $"{{{nameof(Builtin.OptOne)}({Left})}}",
             Kind.OptAll => $"{{{nameof(Builtin.OptAll)}({Left})}}",
+            Kind.OptItemCount => $"{{{nameof(Builtin.OptionCount)}({Left?.Name}, {Name})}}",
+            Kind.OptItemPercent => $"{{{nameof(Builtin.OptionCountPercent)}({Left?.Name}, {Name})}}",
+            Kind.OptCategoryCount => $"{{{nameof(Builtin.OptionCount)}(@{Left?.Name}, {Name})}}",
+            Kind.OptCategoryPercent => $"{{{nameof(Builtin.OptionCountPercent)}(@{Left?.Name}, {Name})}}",
             Kind.YamlEnabled => $"{{{nameof(Builtin.YamlEnabled)}({Name})}}",
             Kind.YamlDisabled => $"{{{nameof(Builtin.YamlDisabled)}({Name})}}",
             Kind.YamlEqual => $"{{{nameof(Builtin.YamlCompare)}({Name} = {Count})}}",

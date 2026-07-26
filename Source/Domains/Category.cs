@@ -24,6 +24,11 @@ public readonly partial record struct Category(Chars Name, bool IsHidden = false
         count > 0 ? new Logic(this, count) :
         throw new ArgumentOutOfRangeException(nameof(count), count, $"Cannot have {count} amounts of {Name}.");
 
+    /// <summary>Makes a requirement that the category should be obtained multiple times.</summary>
+    /// <param name="yaml">The yaml.</param>
+    [Pure]
+    public Logic this[Yaml yaml] => new(Name, yaml, Logic.Kind.OptItemCount);
+
     /// <summary>Makes a requirement that all items with this category should be obtained.</summary>
     [Pure]
     public Logic All
@@ -125,4 +130,12 @@ public readonly partial record struct Category(Chars Name, bool IsHidden = false
     /// <returns>The new <see cref="Manual.Logic"/> instance.</returns>
     [Pure]
     public Logic? Percent(double index, double scaling) => Logic.Percent(this, index, scaling);
+
+    /// <summary>
+    /// Makes a requirement that the category should be obtained in at least some threshold percentage.
+    /// </summary>
+    /// <param name="yaml">The yaml option.</param>
+    /// <returns>The new <see cref="Manual.Logic"/> instance.</returns>
+    [Pure]
+    public Logic Percent(Yaml yaml) => Logic.Percent(this, yaml);
 }

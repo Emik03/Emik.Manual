@@ -25,6 +25,14 @@ public sealed partial class Logic
         /// <seealso href="https://github.com/ManualForArchipelago/Manual/blob/main/docs/syntax/requires.md#optallitemname"/>
         OptAll,
 
+        /// <summary>Requires a certain amount of an item specified by the yaml.</summary>
+        /// <seealso href="https://github.com/ManualForArchipelago/Manual/blob/main/docs/syntax/requires.md#optioncountitem_name-option_name-and-optioncountpercentitem_name-option_name"/>
+        OptionCount,
+
+        /// <summary>Requires a certain percentage of an item specified by the yaml.</summary>
+        /// <seealso href="https://github.com/ManualForArchipelago/Manual/blob/main/docs/syntax/requires.md#optioncountitem_name-option_name-and-optioncountpercentitem_name-option_name"/>
+        OptionCountPercent,
+
         /// <summary>Checks whether the yaml option is enabled.</summary>
         /// <seealso href="https://github.com/ManualForArchipelago/Manual/blob/main/docs/syntax/requires.md#yamlenabledoption_name-and-yamldisabledoption_name"/>
         YamlEnabled,
